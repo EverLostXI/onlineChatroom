@@ -3,6 +3,7 @@
 #include <cstring>
 #include <map>
 // 获取时间戳
+#include <sstream>
 #include <ctime>
 // Windows提供的socket API
 #include <winsock2.h>
@@ -14,7 +15,7 @@
 // C++ 11线程库
 #include <thread>
 // 链接WinSock库
-// #pragma comment(lib, "ws2_32.lib") 非MSVC编译器无法识别，必须手动链接Winsock库
+#pragma comment(lib, "ws2_32.lib")// 非MSVC编译器无法识别，必须手动链接Winsock库
 // 服务端已经用CMake链接
 
 
