@@ -15,6 +15,8 @@ public:
     explicit RegisterDialog(QWidget *parent = nullptr);
     ~RegisterDialog();
 
+    Ui::RegisterDialog *ui;
+
 signals: // <--- 添加 signals 区域
     // 定义一个信号，当用户点击注册时，就发射这个信号
     // 它会把用户名和密码作为参数“喊”出去
@@ -28,7 +30,7 @@ private slots:
     void on_backButton_clicked();
 
 private:
-    Ui::RegisterDialog *ui;
+
 };
 
 #endif // REGISTERDIALOG_H

@@ -41,7 +41,7 @@ void RegisterDialog::on_registerButton_clicked()
     emit registrationRequested(username, password);
 
     // 注册成功后，关闭对话框并返回 Accepted 状态
-    accept();
+    //accept();
 }
 
 void RegisterDialog::on_backButton_clicked()
