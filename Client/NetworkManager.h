@@ -38,6 +38,7 @@ private slots:
 
     void onRequestTimeout(); // <--- 3. 添加一个新的槽函数，用于处理定时器超时事件
 
+public slots:
     // 添加一个新的槽，用来接收UI的注册请求
     void onRegistrationRequested(const QString& username, const QString& password);
 
