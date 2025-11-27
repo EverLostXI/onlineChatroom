@@ -30,5 +30,9 @@ private slots:
 private:
     Ui::MainWindow *ui;
     // ...
+    void updateConversationList(); // <-- 声明一个刷新界面的函数
+
+    QMap<int, QString> m_friends; // <-- 用来存储好友 (ID -> 名字)
+    QMap<int, QString> m_groups;  // <-- 用来存储群聊 (ID -> 名字)
 };
 #endif // MAINWINDOW_H

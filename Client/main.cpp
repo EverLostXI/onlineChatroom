@@ -13,12 +13,12 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     LoginDialog loginDialog;
+//
+    w.show();
+    return a.exec();
 
-    while (true) {
-        w.show();
-        return a.exec();
+//以上为主聊天界面测试，若需测试登录注册功能可将上两行删除，启用下面代码
 
-    }
 /*
     // 显示登录对话框。如果用户登录成功 (返回 Accepted)，则继续
     if (loginDialog.exec() == QDialog::Accepted) {
@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
         w.show();
         return a.exec();
     }
-*/
+
     // 如果用户关闭了登录窗口或登录失败，程序直接退出
-    return 0;
+    //return 0;
+*/
 }

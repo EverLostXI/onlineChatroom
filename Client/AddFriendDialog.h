@@ -15,6 +15,8 @@ public:
     explicit AddFriendDialog(QWidget *parent = nullptr);
     ~AddFriendDialog();
 
+    int getFriendId() const; // <-- 添加这个函数声明
+
 private:
     Ui::AddFriendDialog *ui;
 };
