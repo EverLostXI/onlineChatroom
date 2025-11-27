@@ -98,14 +98,25 @@ public:
 
 
 
-    Packet() = default;
-    explicit Packet(MsgType t){ hdr.type = static_cast<uint8_t>(t); }
+    // 修改后的默认构造函数：确保hdr被清零
+    Packet() {
+        memset(&hdr, 0, sizeof(Header));
+    }
+    // 修改后的带类型的构造函数：先清零，再赋值
+    explicit Packet(MsgType t) {
+        memset(&hdr, 0, sizeof(Header));
+        hdr.type = static_cast<uint8_t>(t);
+    }
     //客户端封包
     /* 方法：创建登录请求包 */
     static Packet makeLogin(uint8_t user, const std::string& pwd)//发送id直接作为用户名，大小0~255
     {
         Packet p(MsgType::LoginReq);
         p.hdr.sendid = user;
+
+        //下一行为测试用
+        //p.hdr.recvid = 0xAA; // <--- 临时加上这一行，给一个特殊的值
+
         p.writeField2(pwd);
         p.finish();
         return p;
@@ -250,11 +261,12 @@ private:
     std::vector<uint8_t> field4;     // 变长区4
 
     /* 完成打包：设置长度字段为网络序 */
-    void finish(){ 
-        hdr.field1Len = h2n16(static_cast<uint16_t>(field1.size()));
-        hdr.field2Len = h2n16(static_cast<uint16_t>(field2.size()));
-        hdr.field3Len = h2n16(static_cast<uint16_t>(field3.size()));
-        hdr.field4Len = h2n16(static_cast<uint16_t>(field4.size()));
+    void finish(){
+        // 直接赋值长度
+        hdr.field1Len = static_cast<uint16_t>(field1.size());
+        hdr.field2Len = static_cast<uint16_t>(field2.size());
+        hdr.field3Len = static_cast<uint16_t>(field3.size());
+        hdr.field4Len = static_cast<uint16_t>(field4.size());
     }
     
     /* 向变长区写入原始数据 */

@@ -19,7 +19,7 @@ void RegisterDialog::on_registerButton_clicked()
 {
     QString username = ui->usernameLineEdit->text();
     QString password = ui->passwordLineEdit->text();
-    QString confirm = ui->usernameLineEdit->text();
+    QString confirm = ui->confirmPasswordLineEdit_2->text();
 
     // 1. 检查输入是否为空
     if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
@@ -37,8 +37,8 @@ void RegisterDialog::on_registerButton_clicked()
     // 例如，将用户名和密码保存到数据库或文件中。
     // 为了演示，我们只显示一个成功的消息。
     // TODOTODOTODO: 实现真正的账号存储逻辑
-
-    QMessageBox::information(this, "注册成功", "新账号 " + username + " 已成功创建！");
+    // 3. 发射信号，把注册任务交给 NetworkManager
+    emit registrationRequested(username, password);
 
     // 注册成功后，关闭对话框并返回 Accepted 状态
     accept();

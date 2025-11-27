@@ -38,6 +38,14 @@ private slots:
 
     void onRequestTimeout(); // <--- 3. 添加一个新的槽函数，用于处理定时器超时事件
 
+    // 添加一个新的槽，用来接收UI的注册请求
+    void onRegistrationRequested(const QString& username, const QString& password);
+
+signals:
+    // ...
+    // 添加一个新的信号，用来通知整个应用注册的结果
+    void registrationResult(bool success, const QString& message);
+
 private:
     // 私有构造函数，确保外部不能直接创建
     explicit NetworkManager(QObject *parent = nullptr);

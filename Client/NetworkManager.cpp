@@ -143,9 +143,11 @@ void NetworkManager::onReadyRead()
             case MsgType::regireturn:
                 qDebug() << "Received register response.";
                 if (receivedPacket.success()) {
-                    emit registrationSuccess();
+                    // 发射新的、带信息的信号
+                    emit registrationResult(true, "新账号注册成功！");
                 } else {
-                    emit registrationFailed();
+                    // 发射新的、带信息的信号
+                    emit registrationResult(false, "注册失败，该用户名可能已被占用。");
                 }
                 break;
 
@@ -158,6 +160,41 @@ void NetworkManager::onReadyRead()
 
         // 8. 从缓冲区中移除已处理的数据包
         m_buffer.remove(0, totalPacketSize);
+    }
+}
+
+// 实现新的槽，负责发送注册请求
+void NetworkManager::onRegistrationRequested(const QString& username, const QString& password)
+{
+    // 0. 检查网络连接状态
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "Cannot send register request: not connected.";
+        emit registrationResult(false, "注册失败：未连接到服务器。");
+        return;
+    }
+
+    // 1. 数据转换和验证
+    bool ok;
+    uint8_t userId = username.toUInt(&ok);
+    if (!ok || username.isEmpty()) {
+        // 如果用户名不是纯数字或为空，就直接通知失败，不发送网络包
+        emit registrationResult(false, "注册失败：用户名必须是0-255的数字。");
+        return;
+    }
+
+    std::string pwdStr = password.toStdString();
+
+    // 2. 封包
+    Packet regPacket = Packet::makeCreAcc(userId, pwdStr);
+
+    // 3. 发送
+    if (regPacket.sendTo(m_socket)) {
+        qDebug() << "Sent register request for user:" << userId;
+        // 4. 启动超时定时器
+        m_requestTimer->start(10000); // 10秒超时
+    } else {
+        qDebug() << "Failed to send register request.";
+        emit registrationResult(false, "注册失败：数据发送异常。");
     }
 }
 

@@ -3,6 +3,8 @@
 #include "NetworkManager.h" // 引入我们的网络核心
 #include <QMessageBox>
 
+#include "RegisterDialog.h"
+
 LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::LoginDialog)
@@ -119,4 +121,32 @@ void LoginDialog::onRequestTimeout()
     ui->loginButton->setEnabled(true);
     ui->registerButton->setEnabled(true);
     ui->loginButton->setText("登录");
+}
+
+void RegisterDialog::on_registerButton_clicked()
+{
+    RegisterDialog regDialog(this);
+    NetworkManager& netManager = NetworkManager::instance(); // 使用单例
+
+    // 连接1：UI请求 -> 网络模块处理
+    connect(&regDialog, &RegisterDialog::registrationRequested,
+            &netManager, &NetworkManager::onRegistrationRequested);
+
+    // 连接2：网络模块结果 -> UI响应
+    connect(&netManager, &NetworkManager::registrationResult,
+            &regDialog, [&](bool success, const QString& msg) {
+                if (success) {
+                    QMessageBox::information(&regDialog, "成功", msg);
+                    regDialog.accept(); // 成功后关闭
+                } else {
+                    QMessageBox::warning(&regDialog, "失败", msg);
+                    // 失败后不关闭，让用户重试
+                }
+            });
+
+    regDialog.exec();
+
+    // 对话框关闭后，最好断开连接，这是一个好习惯
+    disconnect(&regDialog, &RegisterDialog::registrationRequested, &netManager, &NetworkManager::onRegistrationRequested);
+    disconnect(&netManager, &NetworkManager::registrationResult, &regDialog, nullptr);
 }
