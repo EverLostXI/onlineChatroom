@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QTimer>      // <--- 1. 添加 QTimer 头文件
 #include "chatMsg.hpp" // <-- 改成这个正确的文件名
+#include "mainwindow.h"
 
 class NetworkManager : public QObject
 {
@@ -23,6 +24,7 @@ public:
     // [新增] 添加下面这一行，你的 MainWindow.cpp 正是想调用它！
     void sendAddFriendResponse(uint8_t originalRequesterId, uint8_t selfId, bool accepted);
 
+    void sendMessage(uint8_t selfId, uint8_t targetId, const QString& text);
     static uint8_t selfId();
 
 signals:
@@ -38,7 +40,7 @@ signals:
     void addFriendResult(bool success, uint8_t friendId);
     void autoAcceptFriendRequest(uint8_t requesterId); // [新增] 自动同意好友请求信号
 
-
+    void newMessageReceived(const ChatMessage &message, int conversationId);
     void requestTimeout(); // <--- 2. 添加一个新的信号，用于通知UI请求超时
 
 

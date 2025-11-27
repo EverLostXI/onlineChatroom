@@ -1,5 +1,6 @@
 #include "networkmanager.h"
 #include <QDebug>
+#include "mainwindow.h"
 
 // --- 单例实现 ---
 NetworkManager& NetworkManager::instance()
@@ -197,6 +198,37 @@ void NetworkManager::onReadyRead()
                 break;
             }
 
+                // ↓↓↓ 添加这个处理聊天消息的新 CASE ↓↓↓
+            case MsgType::NormalMsg:
+            {
+                uint8_t senderId = receivedPacket.getsendid();
+                uint8_t targetId = receivedPacket.getrecvid(); // 这个ID要么是你自己，要么是一个群ID
+                // 根据你的 packet.h, 消息内容在 field1
+                QString content = QString::fromStdString(receivedPacket.getField1Str());
+
+                ChatMessage msg;
+                msg.senderId = senderId;
+                msg.text = content;
+                msg.timestamp = QDateTime::currentDateTime();
+
+                // 为UI确定正确的对话ID (conversationId)
+                // 这个逻辑假设你的服务器发送群消息时 recvid = 群ID，
+                // 发送私聊消息时 recvid = 你的ID。
+                int conversationId;
+                if (targetId == selfId()) {
+                    // 这是发给我的私聊消息。对话是和发送者(sender)的。
+                    conversationId = senderId;
+                } else {
+                    // 这很可能是一条群消息。对话是和这个群(target)的。
+                    conversationId = targetId;
+                }
+
+                qDebug() << "收到 NormalMsg. 对话ID:" << conversationId << "发送者:" << senderId << "内容:" << content;
+                emit newMessageReceived(msg, conversationId);
+                break;
+            }
+
+
             default:
                 qDebug() << "Received unknown message type:" << static_cast<int>(receivedPacket.type());
                 break;
@@ -258,4 +290,20 @@ uint8_t NetworkManager::selfId()
     // 目前硬编码返回用户ID为 1
     // TODO: 将来这里需要替换为从登录信息中获取的真实ID
     return 1;
+}
+
+void NetworkManager::sendMessage(uint8_t selfId, uint8_t targetId, const QString& text)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "无法发送消息：未连接到服务器。";
+        return;
+    }
+
+    // 使用你已有的 Packet::Message 函数
+    // 注意：你的函数需要 std::string，所以我们用 toStdString() 转换
+    // 最后一个时间戳参数暂时留空
+    Packet p = Packet::Message(selfId, targetId, text.toStdString(), "");
+
+    qDebug() << "正在发送 NormalMsg 从" << selfId << "到目标" << targetId;
+    p.sendTo(m_socket);
 }
