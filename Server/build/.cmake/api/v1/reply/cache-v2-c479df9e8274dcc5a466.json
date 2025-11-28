@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/TempProject/build"
+			"value" : "d:/Projects/Server/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -139,10 +139,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "CXX compiler"
 				}
 			],
-			"type" : "FILEPATH",
+			"type" : "STRING",
 			"value" : "D:/TDM-GCC/bin/g++.exe"
 		},
 		{
@@ -455,7 +455,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/TempProject/build/CMakeFiles/pkgRedirects"
+			"value" : "D:/Projects/Server/build/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -527,7 +527,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/TempProject/chatroom"
+			"value" : "D:/Projects/Server"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1199,7 +1199,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/TempProject/build"
+			"value" : "D:/Projects/Server/build"
 		},
 		{
 			"name" : "Chat_IS_TOP_LEVEL",
@@ -1223,7 +1223,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/TempProject/chatroom"
+			"value" : "D:/Projects/Server"
 		}
 	],
 	"kind" : "cache",

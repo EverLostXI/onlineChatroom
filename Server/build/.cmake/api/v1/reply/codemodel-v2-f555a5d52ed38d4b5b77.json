@@ -16,8 +16,7 @@
 					"source" : ".",
 					"targetIndexes" : 
 					[
-						0,
-						1
+						0
 					]
 				}
 			],
@@ -32,20 +31,12 @@
 					"name" : "Chat",
 					"targetIndexes" : 
 					[
-						0,
-						1
+						0
 					]
 				}
 			],
 			"targets" : 
 			[
-				{
-					"directoryIndex" : 0,
-					"id" : "chat_client::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-chat_client-Debug-2b4bdcfdcc9a495e5bdf.json",
-					"name" : "chat_client",
-					"projectIndex" : 0
-				},
 				{
 					"directoryIndex" : 0,
 					"id" : "chat_server::@6890427a1f51a3e7e1df",
@@ -59,8 +50,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "D:/TempProject/build",
-		"source" : "D:/TempProject/chatroom"
+		"build" : "D:/Projects/Server/build",
+		"source" : "D:/Projects/Server"
 	},
 	"version" : 
 	{

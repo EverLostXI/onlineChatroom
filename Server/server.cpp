@@ -17,7 +17,7 @@
 // 线程库
 #include <thread>
 // 消息封装类
-#include "chatMsg.hpp"
+#include "../chatMsg.hpp"
 // 需要链接WinSock库
 // #pragma comment(lib, "ws2_32.lib") 非MSVC编译器无法识别，必须手动链接Winsock库
 // 服务端已经用CMake链接
