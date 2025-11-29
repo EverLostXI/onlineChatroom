@@ -16,8 +16,8 @@
 #include <iomanip>
 // 线程库
 #include <thread>
-// 消息封装类
-#include "../chatMsg.hpp"
+// 消息封装类（服务器专用版本，不依赖Qt）
+#include "chatMsg_server.hpp"
 // 需要链接WinSock库
 // #pragma comment(lib, "ws2_32.lib") 非MSVC编译器无法识别，必须手动链接Winsock库
 // 服务端已经用CMake链接
@@ -25,11 +25,72 @@
 
 using namespace std;
 
-
 // 设置服务器端口号
 const int PORT = 8888;
 // 设置listen连接队列长度
 const int BACKLOG = 5;
+
+
+// 补充函数：为Packet添加Windows socket支持
+// chatmsg中recv和send是用的qt封装的函数，由于server不依赖qt，只能重新写一个winsock版本的
+
+// 接收数据包
+bool RecvPacket(SOCKET sock, Packet& packet) {
+    // 先接收Header（Header的定义在chatmsg.hpp中）
+    char headerBuf[sizeof(Header)]; // 取得包头长度
+    int totalReceived = 0; 
+    while (totalReceived < sizeof(Header)) { // 循环接收包头
+        int n = recv(sock, headerBuf + totalReceived, sizeof(Header) - totalReceived, 0);
+        if (n <= 0) return false;
+        totalReceived += n;
+    }
+    
+    // 解析header获取body大小
+    Header* hdr = reinterpret_cast<Header*>(headerBuf);
+    size_t bodySize = n2h16(hdr->field1Len) + n2h16(hdr->field2Len) + 
+                      n2h16(hdr->field3Len) + n2h16(hdr->field4Len);
+    
+    // 接收完整数据包
+    vector<char> fullPacket(sizeof(Header) + bodySize);
+    memcpy(fullPacket.data(), headerBuf, sizeof(Header));
+    
+    totalReceived = 0;
+    while (totalReceived < bodySize) {
+        int n = recv(sock, fullPacket.data() + sizeof(Header) + totalReceived, 
+                     bodySize - totalReceived, 0);
+        if (n <= 0) return false;
+        totalReceived += n;
+    }
+    
+    // 使用parseFrom解析
+    return packet.parseFrom(fullPacket.data(), fullPacket.size());
+}
+
+// 发送数据包
+bool SendPacket(SOCKET sock, const Packet& packet) {
+    // 准备网络字节序的包头
+    Header networkHeader;
+    memcpy(&networkHeader, packet.data(), sizeof(Header));
+    networkHeader.field1Len = h2n16(networkHeader.field1Len);
+    networkHeader.field2Len = h2n16(networkHeader.field2Len);
+    networkHeader.field3Len = h2n16(networkHeader.field3Len);
+    networkHeader.field4Len = h2n16(networkHeader.field4Len);
+    
+    // 发送header
+    if (send(sock, reinterpret_cast<const char*>(&networkHeader), sizeof(Header), 0) != sizeof(Header)) {
+        return false;
+    }
+    
+    // 发送各个field
+    const char* dataPtr = packet.data() + sizeof(Header);
+    size_t bodySize = packet.size() - sizeof(Header);
+    if (bodySize > 0) {
+        if (send(sock, dataPtr, bodySize, 0) != bodySize) {
+            return false;
+        }
+    }
+    return true;
+}
 
 // 获取时间戳
 string TimeStamp() {
@@ -87,7 +148,7 @@ void InitializeLogFile() { // 生成文件
     string logfilename = LOG_FOLDER + FileNameGen();
     logFile.open(logfilename, ios::out | ios::app);
     if (!logFile.is_open()) {
-        cerr << "无法打开日志文件：" << logfilename << endl; // 此时无法写入日志，因为日志都没打开
+        cerr << "无法打开日志文件：" << logfilename << endl; // 此时无法写入日志（当然）
     } else {
         string message = "日志文件初始化成功：" + logfilename;
         WriteLog(LogLevel::INFO_LEVEL, message);
@@ -177,20 +238,21 @@ public:
 */
 
 // 存储ID与密码 （可以在客户端部署对密码的不可逆加密）
-map<string, string> g_userCredentials = {
+// ID统一为uint8长度
+map<uint8_t, string> g_userCredentials = {
 
 };
 
 //将ID与用户对象对应
-map<string, ClientSession> g_userSessions = {
+map<uint8_t, ClientSession*> g_userSessions = {
 
 };
 
 
 // 验证登录凭证函数
-bool AuthenticateCredential(const string &inputUsername, const string &inputPassword) {
-    if (g_userCredentials.count(inputUsername)) { // 检查map中是否存有该用户名
-        if (g_userCredentials[inputUsername] == inputPassword) { // 如果存在，比较密码
+bool AuthenticateCredential(uint8_t userId, const string &inputPassword) {
+    if (g_userCredentials.count(userId)) { // 检查map中是否存有该用户ID
+        if (g_userCredentials[userId] == inputPassword) { // 如果存在，比较密码
             return true;
         }
     }
@@ -202,72 +264,67 @@ bool AuthenticateCredential(const string &inputUsername, const string &inputPass
 void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPtr)作为一个客户端在内存中的唯一代表
     SOCKET clientSocket = sessionPtr->socket_fd;
     string clientInfo = sessionPtr->client_ip + ":" + to_string(sessionPtr->client_port); // 读取这个连接的ip和端口
-    
     WriteLog(LogLevel::DEBUG_LEVEL, "客户端处理线程启动: " + clientInfo);
     
-    // 消息接收循环：持续接收并处理客户端消息
+    // 消息接收循环，持续接收并处理客户端消息
     while (true) {
         Packet receivedPacket; // 创建数据包对象
         
-        // 接收完整数据包（会阻塞直到收到完整消息或连接断开）
-        if (!receivedPacket.recvFrom(clientSocket)) {
+        // 接收完整数据包并进行错误处理。在接收或断开前会阻塞在这一句。
+        if (!RecvPacket(clientSocket, receivedPacket)) {
             // 连接断开或接收失败
             WriteLog(LogLevel::INFO_LEVEL, "客户端断开连接: " + clientInfo);
             break;
         }
         
-        
         // 根据消息类型分别处理
         switch (receivedPacket.type()) {
-            case MsgType::LoginReq: { // 登录请求
-                // 读取用户名和密码
-                string username = receivedPacket.readStr();
-                string password = receivedPacket.readStr();
+            // 登录请求
+            case MsgType::LoginReq: {
+                // 从header获取userId，从field2获取密码
+                uint8_t userId = receivedPacket.getsendid();
+                string password = receivedPacket.getField2Str();
                 
-                WriteLog(LogLevel::INFO_LEVEL, "登录请求 - 用户名: " + username + ", 来源: " + clientInfo);
+                WriteLog(LogLevel::INFO_LEVEL, "登录请求 - 用户ID: " + to_string(userId) + ", 来源: " + clientInfo);
                 
                 // 验证登录凭证
-                bool authSuccess = AuthenticateCredential(username, password); // TODO: 调用 AuthenticateCredential 验证
+                bool authSuccess = AuthenticateCredential(userId, password);
                 
-                // 构造响应包
-                Packet response(MsgType::LoginReq);
+                // 构造响应包 - 使用正确的消息类型 Loginreturn
+                Packet response = Packet::makeLoginRe(authSuccess);
                 if (authSuccess) {
-                    response.writeStr("success");
-                    sessionPtr->authenticate(username); // 标记会话为已认证
-                    WriteLog(LogLevel::INFO_LEVEL, "用户认证成功: " + username);
+                    sessionPtr->authenticate(to_string(userId)); // 标记会话为已认证
+                    g_userSessions[userId] = sessionPtr; // 记录会话映射
+                    WriteLog(LogLevel::INFO_LEVEL, "用户认证成功: " + to_string(userId));
                 } else {
-                    response.writeStr("failed");
-                    WriteLog(LogLevel::WARN_LEVEL, "用户认证失败: " + username);
+                    WriteLog(LogLevel::WARN_LEVEL, "用户认证失败: " + to_string(userId));
                 }
-                response.finish();
                 
-                // 发送响应给客户端
-                send(clientSocket, response.data(), response.size(), 0);
+                // 发送响应给客户端 - 使用辅助函数
+                SendPacket(clientSocket, response);
                 break;
             }
             
             case MsgType::CreateAcc: { // 创建账号请求
-                string username = receivedPacket.readStr();
-                string password = receivedPacket.readStr();
+                // 修改：从header获取userId，从field2获取密码
+                uint8_t userId = receivedPacket.getsendid();
+                string password = receivedPacket.getField2Str();
                 
-                WriteLog(LogLevel::INFO_LEVEL, "创建账号请求 - 用户名: " + username);
+                WriteLog(LogLevel::INFO_LEVEL, "创建账号请求 - 用户ID: " + to_string(userId));
                 
-                // 检查用户名是否已存在
-                Packet response(MsgType::CreateAcc);
-                if (g_userCredentials.count(username)) {
-                    response.writeStr("failed");
-                    response.writeStr("用户名已存在");
-                    WriteLog(LogLevel::WARN_LEVEL, "账号创建失败：用户名已存在 - " + username);
+                // 检查用户ID是否已存在
+                bool success = false;
+                if (g_userCredentials.count(userId)) {
+                    WriteLog(LogLevel::WARN_LEVEL, "账号创建失败：用户ID已存在 - " + to_string(userId));
                 } else {
-                    g_userCredentials[username] = password;
-                    response.writeStr("success");
-                    response.writeStr("账号创建成功");
-                    WriteLog(LogLevel::INFO_LEVEL, "账号创建成功 - 用户名: " + username);
+                    g_userCredentials[userId] = password;
+                    success = true;
+                    WriteLog(LogLevel::INFO_LEVEL, "账号创建成功 - 用户ID: " + to_string(userId));
                 }
 
-                // 发送响应包
-                response.finish();
-                send(clientSocket, response.data(), response.size(), 0);
+                // 使用正确的响应包构造方法
+                Packet response = Packet::makeRegiRe(success);
+                SendPacket(clientSocket, response);
                 break;
             }
             
@@ -278,32 +335,29 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
                     break;
                 }
                 
-                string content = receivedPacket.readStr();
-                string receiver = receivedPacket.readStr();
+                // 修改：从header获取收发信息，从field1获取内容
+                uint8_t senderId = receivedPacket.getsendid();
+                uint8_t receiverId = receivedPacket.getrecvid();
+                string content = receivedPacket.getField1Str();
                 
                 WriteLog(LogLevel::INFO_LEVEL, 
-                         "收到消息 - 发送者: " + sessionPtr->username + 
-                         ", 接收者: " + receiver + 
+                         "收到消息 - 发送者ID: " + to_string(senderId) + 
+                         ", 接收者ID: " + to_string(receiverId) + 
                          ", 内容: " + content);
                 
-                // 检查是否有回复ID
-                if (receivedPacket.isReply()) {
-                    uint32_t replyId = receivedPacket.replyMsgId();
-                    WriteLog(LogLevel::DEBUG_LEVEL, "这是对消息ID " + to_string(replyId) + " 的回复");
+                // 转发消息给接收者
+                if (g_userSessions.count(receiverId)) {
+                    ClientSession* targetSession = g_userSessions[receiverId];
+                    // 直接转发原始数据包
+                    SendPacket(targetSession->socket_fd, receivedPacket);
+                    WriteLog(LogLevel::DEBUG_LEVEL, "消息已转发给用户ID: " + to_string(receiverId));
+                } else {
+                    WriteLog(LogLevel::WARN_LEVEL, "接收者不在线: " + to_string(receiverId));
                 }
-                
-                // 检查是否有@列表
-                vector<uint32_t> mentions = receivedPacket.atList();
-                if (!mentions.empty()) {
-                    WriteLog(LogLevel::DEBUG_LEVEL, "消息中提到了 " + to_string(mentions.size()) + " 个用户");
-                }
-                
-                // TODO: 转发消息给接收者
-                // 需要在g_userSessions中查找接收者的socket并转发
                 break;
             }
             
-            case MsgType::CreateGroup: { // 创建群组请求
+            case MsgType::CreateGrope: { // 创建群组请求（注意拼写是Grope）
                 if (!sessionPtr->is_authenticated) {
                     WriteLog(LogLevel::WARN_LEVEL, "未认证用户尝试创建群组");
                     break;
@@ -312,15 +366,57 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
                 WriteLog(LogLevel::INFO_LEVEL, "创建群组请求 - 发起者: " + sessionPtr->username);
                 
                 // TODO: 处理群组创建逻辑
+                // 暂时返回成功
+                Packet response = Packet::makeCreGroRe(true);
+                SendPacket(clientSocket, response);
                 break;
             }
             
-            case MsgType::Beat: { // 心跳包
-                // 心跳包已更新last_heartbeat_time，无需其他处理
-                WriteLog(LogLevel::TRACE_LEVEL, "收到心跳包: " + clientInfo);
+            case MsgType::AddFriendReq: { // 添加好友请求（新增）
+                if (!sessionPtr->is_authenticated) {
+                    WriteLog(LogLevel::WARN_LEVEL, "未认证用户尝试添加好友");
+                    break;
+                }
+                
+                uint8_t requesterId = receivedPacket.getsendid();
+                uint8_t targetId = receivedPacket.getrecvid();
+                
+                WriteLog(LogLevel::INFO_LEVEL, 
+                         "添加好友请求 - 请求者ID: " + to_string(requesterId) + 
+                         ", 目标ID: " + to_string(targetId));
+                
+                // 检查目标用户是否在线
+                if (g_userSessions.count(targetId)) {
+                    // 转发好友请求给目标用户
+                    ClientSession* targetSession = g_userSessions[targetId];
+                    SendPacket(targetSession->socket_fd, receivedPacket);
+                    WriteLog(LogLevel::DEBUG_LEVEL, "好友请求已转发给用户ID: " + to_string(targetId));
+                } else {
+                    // 目标用户不在线，直接返回失败
+                    Packet response = Packet::makeAddFriendRe(requesterId, targetId, false);
+                    SendPacket(clientSocket, response);
+                    WriteLog(LogLevel::WARN_LEVEL, "目标用户不在线: " + to_string(targetId));
+                }
                 break;
             }
             
+            case MsgType::AddFriendRe: { // 添加好友响应（新增）
+                // B用户接受了A的好友请求，需要转发给A
+                uint8_t originalRequesterId = receivedPacket.getsendid();
+                bool accepted = receivedPacket.success();
+                
+                WriteLog(LogLevel::INFO_LEVEL, 
+                         "好友请求响应 - 原请求者ID: " + to_string(originalRequesterId) + 
+                         ", 结果: " + (accepted ? "接受" : "拒绝"));
+                
+                // 转发响应给原请求者
+                if (g_userSessions.count(originalRequesterId)) {
+                    ClientSession* requesterSession = g_userSessions[originalRequesterId];
+                    SendPacket(requesterSession->socket_fd, receivedPacket);
+                    WriteLog(LogLevel::DEBUG_LEVEL, "好友响应已转发给用户ID: " + to_string(originalRequesterId));
+                }
+                break;
+            }
             default: {
                 WriteLog(LogLevel::WARN_LEVEL, 
                          "未知消息类型: " + to_string(static_cast<int>(receivedPacket.type())));

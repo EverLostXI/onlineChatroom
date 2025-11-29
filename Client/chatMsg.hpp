@@ -17,7 +17,7 @@ inline uint32_t n2h32(uint32_t v){ return qFromBigEndian(v); }
 enum class MsgType : uint8_t
 {
     LoginReq     = 0x01,  // 登录请求
-    CreateAcc    = 0x02,  // 创建账号
+    CreateAcc    = 0x02,  // 注册账号
     CreateGrope  = 0x03,  // 创建群聊请求
     Loginreturn  = 0x04,  // 登录反馈
     regireturn   = 0x05,  // 注册反馈
