@@ -199,11 +199,10 @@ void NetworkManager::onReadyRead()
             }
 
                 // ↓↓↓ 添加这个处理聊天消息的新 CASE ↓↓↓
+                // [修改] 处理私聊消息
             case MsgType::NormalMsg:
             {
                 uint8_t senderId = receivedPacket.getsendid();
-                uint8_t targetId = receivedPacket.getrecvid(); // 这个ID要么是你自己，要么是一个群ID
-                // 根据你的 packet.h, 消息内容在 field1
                 QString content = QString::fromStdString(receivedPacket.getField1Str());
 
                 ChatMessage msg;
@@ -211,20 +210,60 @@ void NetworkManager::onReadyRead()
                 msg.text = content;
                 msg.timestamp = QDateTime::currentDateTime();
 
-                // 为UI确定正确的对话ID (conversationId)
-                // 这个逻辑假设你的服务器发送群消息时 recvid = 群ID，
-                // 发送私聊消息时 recvid = 你的ID。
-                int conversationId;
-                if (targetId == selfId()) {
-                    // 这是发给我的私聊消息。对话是和发送者(sender)的。
-                    conversationId = senderId;
-                } else {
-                    // 这很可能是一条群消息。对话是和这个群(target)的。
-                    conversationId = targetId;
-                }
+                // 私聊消息，对话ID是对方的ID，我们将其转为字符串
+                QString conversationId = QString::number(senderId);
 
-                qDebug() << "收到 NormalMsg. 对话ID:" << conversationId << "发送者:" << senderId << "内容:" << content;
+                qDebug() << "收到 NormalMsg (私聊). 对话ID:" << conversationId << "发送者:" << senderId;
                 emit newMessageReceived(msg, conversationId);
+                break;
+            }
+                // [新增] 处理群聊消息
+            case MsgType::GroupMsg:
+            {
+                uint8_t senderId = receivedPacket.getsendid();
+                QString content = QString::fromStdString(receivedPacket.getField1Str());
+                QString groupId = QString::fromStdString(receivedPacket.getField2Str()); // 从 field2 获取群ID
+
+                ChatMessage msg;
+                msg.senderId = senderId;
+                msg.text = content;
+                msg.timestamp = QDateTime::currentDateTime();
+
+                // 群聊消息，对话ID就是群ID本身
+                QString conversationId = groupId;
+
+                qDebug() << "收到 GroupMsg (群聊). 对话ID:" << conversationId << "发送者:" << senderId;
+                emit newMessageReceived(msg, conversationId);
+                break;
+            }
+
+                // [新增] 处理创建群聊的反馈 (给创建者)
+            case MsgType::CreateGroRe:
+            {
+                if (receivedPacket.success()) {
+                    qDebug() << "群聊创建成功。";
+                    emit createGroupResult(true, "群聊创建成功！");
+                } else {
+                    qDebug() << "群聊创建失败，服务器返回失败信息。";
+                    emit createGroupResult(false, "创建失败：该群名已被占用。");
+                }
+                break;
+            }
+
+                // [修改] 处理被动收到的创建群聊消息 (给其他成员)
+            case MsgType::CreateGrope:
+            {
+                uint8_t creatorId = receivedPacket.getsendid();
+                QString groupName = QString::fromStdString(receivedPacket.getField2Str());
+
+                // [新增] 从 field1 解析出其他成员的ID列表
+                const std::vector<uint8_t>& memberIdStdVec = receivedPacket.getField1();
+                QVector<uint8_t> memberIds(memberIdStdVec.begin(), memberIdStdVec.end());
+
+                qDebug() << "被用户" << creatorId << "拉入新群聊:" << groupName;
+
+                // [修改] 发射带有成员列表的信号
+                emit addedToNewGroup(groupName, creatorId, memberIds);
                 break;
             }
 
@@ -233,6 +272,7 @@ void NetworkManager::onReadyRead()
                 qDebug() << "Received unknown message type:" << static_cast<int>(receivedPacket.type());
                 break;
             }
+
         }
 
         // 8. 从缓冲区中移除已处理的数据包
@@ -307,3 +347,40 @@ void NetworkManager::sendMessage(uint8_t selfId, uint8_t targetId, const QString
     qDebug() << "正在发送 NormalMsg 从" << selfId << "到目标" << targetId;
     p.sendTo(m_socket);
 }
+
+// [新增] 实现发送创建群聊请求的函数
+void NetworkManager::sendCreateGroupRequest(const QString& groupName, const QVector<uint8_t>& memberIds)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        emit createGroupResult(false, "创建失败：未连接到服务器。");
+        return;
+    }
+
+    uint8_t creatorId = selfId(); // 获取当前用户的ID
+
+    // 将 QVector<uint8_t> 转换为 std::vector<uint8_t>
+    std::vector<uint8_t> memberIdStdVec(memberIds.begin(), memberIds.end());
+
+    // 调用我们修改后的 makeCreGro 函数
+    Packet p = Packet::makeCreGro(creatorId, memberIdStdVec, groupName.toStdString());
+
+    if (p.sendTo(m_socket)) {
+        qDebug() << "已发送创建群聊请求。群名:" << groupName;
+        m_requestTimer->start(10000); // 启动超时定时器
+    } else {
+        emit createGroupResult(false, "创建失败：网络发送异常。");
+    }
+}
+// [新增] 群聊消息发送函数的实现
+void NetworkManager::sendGroupMessage(uint8_t selfId, const QString& groupId, const QString& text)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "无法发送群聊消息：未连接到服务器。";
+        return;
+    }
+    // 调用你新增的 Packet::makeGroupMessage 封装函数
+    Packet p = Packet::makeGroupMessage(selfId, groupId.toStdString(), text.toStdString(), "");
+    qDebug() << "正在发送 GroupMsg 从" << selfId << "到群聊" << groupId;
+    p.sendTo(m_socket);
+}
+

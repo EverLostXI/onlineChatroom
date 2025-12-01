@@ -21,10 +21,12 @@ enum class MsgType : uint8_t
     CreateGrope  = 0x03,  // 创建群聊请求
     Loginreturn  = 0x04,  // 登录反馈
     regireturn   = 0x05,  // 注册反馈
-    CreateGroRe  = 0x06,  // [新增] 创建群聊反馈
-    AddFriendReq = 0x07,  // [新增] 添加好友请求
-    AddFriendRe  = 0x08,  // [新增] 添加好友反馈
-    NormalMsg    = 0x10   // 普通消息
+    CreateGroRe  = 0x06,  // 创建群聊反馈
+    AddFriendReq = 0x07,  // 添加好友请求
+    AddFriendRe  = 0x08,  // 添加好友反馈
+    Heartbeat    = 0x09,  // 心跳包
+    NormalMsg    = 0x10,   // 普通消息
+    GroupMsg     = 0x11    // [新增] 群聊消息
 };
 
 #pragma pack(push,1)
@@ -131,13 +133,20 @@ public:
     }
     /* 方法：创建群聊 (修改版) */
     // 参数：idlist - 成员ID列表, groupName - 群聊名称
-    static Packet makeCreGro(std::vector<uint8_t>& idlist, const std::string& groupName)
+    static Packet makeCreGro(uint8_t creatorId, const std::vector<uint8_t>& idlist, const std::string& groupName)
     {
         Packet p(MsgType::CreateGrope);
-        // Field 1: 存放成员ID列表 (二进制数据)
+
+        // [修改] 将创建者ID放入 sendid 字段
+        p.hdr.sendid = creatorId;
+
+        // Field 1: 存放其他成员ID列表 (二进制数据)
+        // 注意：这里的 const_cast 是安全的，因为 writeFieldRaw 不会修改数据
         p.writeFieldRaw(p.field1, idlist.data(), idlist.size());
+
         // Field 2: 存放群聊名称 (字符串)
         p.writeField2(groupName);
+
         p.finish();
         return p;
     }
@@ -175,7 +184,6 @@ public:
     {
         Packet p(MsgType::CreateGroRe);
         p.hdr.success = s;
-        // 如果成功，将来可以在 field1 放新群的ID
         p.finish();
         return p;
     }
@@ -192,6 +200,13 @@ public:
     }
 
     //通用
+    /* 方法：心跳包（极简空包，仅type字段有效，其余全为0） */
+    static Packet makeHeartbeat()
+    {
+        Packet p(MsgType::Heartbeat);
+        p.finish();
+        return p;
+    }
     /* 方法：创建聊天消息包 */
     static Packet Message(     uint8_t Sendid, 
                                uint8_t Recvid,
@@ -203,6 +218,21 @@ public:
         p.hdr.recvid = Recvid;
         p.writeField1(textbody);//正文文本
         if (!timestamp.empty()) p.writeField2(timestamp);//时间戳
+        p.finish();
+        return p;
+    }
+    /* [新增] 方法：创建群聊消息包 */
+    static Packet makeGroupMessage(uint8_t senderId, const std::string& groupId, const std::string& textbody, const std::string& timestamp)
+    {
+        Packet p(MsgType::GroupMsg);
+        p.hdr.sendid = senderId;
+        // recvid 在群聊消息中无意义，保持为0
+
+        p.writeField1(textbody);      // Field 1: 消息正文
+        p.writeField2(groupId);       // Field 2: 目标群ID (字符串)
+        if (!timestamp.empty()) {
+            p.writeField3(timestamp); // Field 3: 时间戳 (如果需要)
+        }
         p.finish();
         return p;
     }
