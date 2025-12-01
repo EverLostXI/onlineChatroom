@@ -24,6 +24,7 @@ enum class MsgType : uint8_t
     CreateGroRe  = 0x06,  // 创建群聊反馈
     AddFriendReq = 0x07,  // 添加好友请求
     AddFriendRe  = 0x08,  // 添加好友反馈
+    Heartbeat    = 0x09,  // 心跳包
     NormalMsg    = 0x10   // 普通消息
 };
 
@@ -141,6 +142,14 @@ public:
         p.hdr.sendid = sendId;
         p.hdr.recvid = targetId;
         p.hdr.success = s;
+        p.finish();
+        return p;
+    }
+
+    /* 方法：心跳包（极简空包，仅type字段有效，其余全为0） */
+    static Packet makeHeartbeat()
+    {
+        Packet p(MsgType::Heartbeat);
         p.finish();
         return p;
     }

@@ -1,5 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Projects/Server",
     "files.associations": {
         "array": "cpp",
         "atomic": "cpp",
