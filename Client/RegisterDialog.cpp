@@ -7,7 +7,7 @@ RegisterDialog::RegisterDialog(QWidget *parent) :
     ui(new Ui::RegisterDialog)
 {
     ui->setupUi(this);
-    setWindowTitle("注册新账号");
+    setWindowTitle("Register");
 }
 
 RegisterDialog::~RegisterDialog()
@@ -23,13 +23,13 @@ void RegisterDialog::on_registerButton_clicked()
 
     // 1. 检查输入是否为空
     if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
-        QMessageBox::warning(this, "注册失败", "用户名和密码不能为空！");
+        QMessageBox::warning(this, "Registration faild!", "Username and password cannot be empty！");
         return;
     }
 
     // 2. 检查两次输入的密码是否一致
     if (password != confirm) {
-        QMessageBox::warning(this, "注册失败", "两次输入的密码不一致！");
+        QMessageBox::warning(this, "Registration faild!", "The two entered passwords do not match！");
         return;
     }
 

@@ -43,10 +43,10 @@ public:
     {
         if (RegisterDialog->objectName().isEmpty())
             RegisterDialog->setObjectName("RegisterDialog");
-        RegisterDialog->resize(400, 300);
+        RegisterDialog->resize(434, 300);
         layoutWidget = new QWidget(RegisterDialog);
         layoutWidget->setObjectName("layoutWidget");
-        layoutWidget->setGeometry(QRect(60, 230, 271, 25));
+        layoutWidget->setGeometry(QRect(60, 230, 311, 25));
         horizontalLayout = new QHBoxLayout(layoutWidget);
         horizontalLayout->setObjectName("horizontalLayout");
         horizontalLayout->setContentsMargins(0, 0, 0, 0);
@@ -62,7 +62,7 @@ public:
 
         layoutWidget1 = new QWidget(RegisterDialog);
         layoutWidget1->setObjectName("layoutWidget1");
-        layoutWidget1->setGeometry(QRect(40, 30, 78, 151));
+        layoutWidget1->setGeometry(QRect(40, 30, 161, 151));
         verticalLayout = new QVBoxLayout(layoutWidget1);
         verticalLayout->setObjectName("verticalLayout");
         verticalLayout->setContentsMargins(0, 0, 0, 0);
@@ -83,7 +83,7 @@ public:
 
         layoutWidget2 = new QWidget(RegisterDialog);
         layoutWidget2->setObjectName("layoutWidget2");
-        layoutWidget2->setGeometry(QRect(180, 30, 135, 151));
+        layoutWidget2->setGeometry(QRect(220, 30, 151, 151));
         verticalLayout_2 = new QVBoxLayout(layoutWidget2);
         verticalLayout_2->setObjectName("verticalLayout_2");
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
@@ -113,11 +113,11 @@ public:
     void retranslateUi(QDialog *RegisterDialog)
     {
         RegisterDialog->setWindowTitle(QCoreApplication::translate("RegisterDialog", "Dialog", nullptr));
-        registerButton->setText(QCoreApplication::translate("RegisterDialog", "\346\263\250\345\206\214", nullptr));
-        backButton->setText(QCoreApplication::translate("RegisterDialog", "\350\277\224\345\233\236", nullptr));
-        label->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">\347\224\250\346\210\267\345\220\215</span></p></body></html>", nullptr));
-        label_2->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">\345\257\206\347\240\201</span></p></body></html>", nullptr));
-        label_3->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">\347\241\256\350\256\244\345\257\206\347\240\201</span></p></body></html>", nullptr));
+        registerButton->setText(QCoreApplication::translate("RegisterDialog", "Register", nullptr));
+        backButton->setText(QCoreApplication::translate("RegisterDialog", "Cancel", nullptr));
+        label->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Username</span></p></body></html>", nullptr));
+        label_2->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Set Password</span></p></body></html>", nullptr));
+        label_3->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Confirm Password</span></p></body></html>", nullptr));
     } // retranslateUi
 
 };

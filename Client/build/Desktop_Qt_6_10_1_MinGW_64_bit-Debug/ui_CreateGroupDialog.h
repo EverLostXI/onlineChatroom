@@ -50,7 +50,7 @@ public:
         buttonBox->setStandardButtons(QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok);
         horizontalLayoutWidget = new QWidget(CreateGroupDialog);
         horizontalLayoutWidget->setObjectName("horizontalLayoutWidget");
-        horizontalLayoutWidget->setGeometry(QRect(20, 20, 331, 71));
+        horizontalLayoutWidget->setGeometry(QRect(10, 20, 351, 71));
         horizontalLayout = new QHBoxLayout(horizontalLayoutWidget);
         horizontalLayout->setObjectName("horizontalLayout");
         horizontalLayout->setContentsMargins(0, 0, 0, 0);
@@ -98,8 +98,8 @@ public:
     void retranslateUi(QDialog *CreateGroupDialog)
     {
         CreateGroupDialog->setWindowTitle(QCoreApplication::translate("CreateGroupDialog", "Dialog", nullptr));
-        label->setText(QCoreApplication::translate("CreateGroupDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">\347\276\244\350\201\212\345\220\215\347\247\260</span></p></body></html>", nullptr));
-        label_2->setText(QCoreApplication::translate("CreateGroupDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">\345\245\275\345\217\213\345\210\227\350\241\250</span></p></body></html>", nullptr));
+        label->setText(QCoreApplication::translate("CreateGroupDialog", "<html><head/><body><p>Group Name</p></body></html>", nullptr));
+        label_2->setText(QCoreApplication::translate("CreateGroupDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Friend List</span></p></body></html>", nullptr));
     } // retranslateUi
 
 };

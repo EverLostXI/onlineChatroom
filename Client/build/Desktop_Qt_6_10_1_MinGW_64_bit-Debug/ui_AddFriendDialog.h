@@ -38,7 +38,7 @@ public:
         buttonBox->setStandardButtons(QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok);
         label = new QLabel(AddFriendDialog);
         label->setObjectName("label");
-        label->setGeometry(QRect(60, 50, 71, 41));
+        label->setGeometry(QRect(30, 50, 131, 41));
         friendIdLineEdit = new QLineEdit(AddFriendDialog);
         friendIdLineEdit->setObjectName("friendIdLineEdit");
         friendIdLineEdit->setGeometry(QRect(30, 100, 131, 21));
@@ -52,7 +52,7 @@ public:
     void retranslateUi(QDialog *AddFriendDialog)
     {
         AddFriendDialog->setWindowTitle(QCoreApplication::translate("AddFriendDialog", "Dialog", nullptr));
-        label->setText(QCoreApplication::translate("AddFriendDialog", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">\345\245\275\345\217\213ID</span></p></body></html>", nullptr));
+        label->setText(QCoreApplication::translate("AddFriendDialog", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">New Friend ID</span></p></body></html>", nullptr));
     } // retranslateUi
 
 };

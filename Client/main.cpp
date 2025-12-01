@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     LoginDialog loginDialog;
 //
-    w.show();
+    loginDialog.show();
     return a.exec();
 
 //以上为主聊天界面测试，若需测试登录注册功能可将上两行删除，启用下面代码

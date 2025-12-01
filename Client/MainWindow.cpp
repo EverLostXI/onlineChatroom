@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_friends[124] = "李四";
     m_groups[125] = "朋友群";
     // 假设我们自己的ID是 50
-    int myUserId = 1;
+    int myUserId = 50;
 
     // --- 1. 创建和张三(1001)的聊天记录 ---
     QList<ChatMessage> zhangsanHistory;

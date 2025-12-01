@@ -4,13 +4,15 @@
 #include <QMessageBox>
 #include "RegisterDialog.h"
 #include "ui_registerdialog.h"
+#include "SetServerDialog.h"
+#include "ui_SetServerDialog.h"
 
 LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
-    setWindowTitle("登录");
+    setWindowTitle("Login");
 
     // --- 核心：建立UI与NetworkManager之间的通信桥梁 ---
     // 获取NetworkManager的单例
@@ -48,7 +50,7 @@ void LoginDialog::on_loginButton_clicked()
 
     // 2. 客户端级别的输入验证
     if (usernameStr.isEmpty() || password.isEmpty()) {
-        QMessageBox::warning(this, "输入错误", "用户名和密码不能为空！");
+        QMessageBox::warning(this, "Incorrect input!", "Username and password cannot be empty！");
         return;
     }
 
@@ -56,7 +58,7 @@ void LoginDialog::on_loginButton_clicked()
     bool isNumeric;
     uint8_t userId = usernameStr.toUShort(&isNumeric); // toUShort可以安全地转为uint8_t
     if (!isNumeric) {
-        QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
+        QMessageBox::warning(this, "Incorrect input!", "Username must be ID number between 0-255！");
         return;
     }
 
@@ -66,9 +68,16 @@ void LoginDialog::on_loginButton_clicked()
     // 4. 更新UI，提供反馈，防止用户重复点击
     ui->loginButton->setEnabled(false);
     ui->registerButton->setEnabled(false);
-    ui->loginButton->setText("登录中...");
+    ui->loginButton->setText("Logging in...");
 
 }
+
+void LoginDialog::on_setServerButton_clicked()
+{
+    SetServerDialog setServerDialog(this);
+    setServerDialog.exec();
+}
+
 
 // 当用户点击“注册”按钮时 (这个逻辑保持不变)
 void LoginDialog::on_registerButton_clicked()
@@ -88,17 +97,17 @@ void LoginDialog::on_registerButton_clicked()
     connect(&netManager, &NetworkManager::registrationResult,
             this, [&](bool success, const QString& msg) {
                 if (success) {
-                    QMessageBox::information(&regDialog, "注册成功", msg);
+                    QMessageBox::information(&regDialog, "Resgistration successful!", msg);
                     regDialog.accept();
                 } else {
-                    QMessageBox::warning(&regDialog, "注册失败", msg);
+                    QMessageBox::warning(&regDialog, "Registration failed", msg);
 
                     // ===================================================
                     // ===== 在这里添加新逻辑，用于恢复注册窗口的UI状态 =====
                     // ===================================================
                     regDialog.ui->registerButton->setEnabled(true);
                     regDialog.ui->backButton->setEnabled(true);
-                    regDialog.ui->registerButton->setText("注册");
+                    regDialog.ui->registerButton->setText("Register");
                 }
             });
 
@@ -118,7 +127,7 @@ void LoginDialog::onLoginSuccess()
 {
     // 登录成功，关闭对话框并返回Accepted
     // exec()的调用处会收到这个结果，从而知道可以进入主界面了
-    QMessageBox::information(this, "成功", "登录成功！");
+    QMessageBox::information(this, "Success!", "Login successful！");
     accept();
 }
 
@@ -126,33 +135,33 @@ void LoginDialog::onLoginSuccess()
 void LoginDialog::onLoginFailed()
 {
     // 登录失败，显示错误信息
-    QMessageBox::warning(this, "登录失败", "用户名或密码错误！");
+    QMessageBox::warning(this, "Login failed!", "Incorrect username or password！");
 
     // 恢复UI，让用户可以重新尝试
     ui->loginButton->setEnabled(true);
     ui->registerButton->setEnabled(true);
-    ui->loginButton->setText("登录");
+    ui->loginButton->setText("Login");
 }
 
 // 当与服务器的连接意外断开时
 void LoginDialog::onDisconnectedFromServer()
 {
-    QMessageBox::critical(this, "连接错误", "与服务器的连接已断开！");
+    QMessageBox::critical(this, "Connection failed!", "Connection to the server has been lost！");
 
     // 同样需要恢复UI
     ui->loginButton->setEnabled(true);
     ui->registerButton->setEnabled(true);
-    ui->loginButton->setText("登录");
+    ui->loginButton->setText("Login");
 }
 
 // === 新增代码：实现超时槽函数 ===
 void LoginDialog::onRequestTimeout()
 {
     // 显示超时错误信息
-    QMessageBox::critical(this, "请求超时", "服务器在5秒内未响应，请检查网络或稍后再试。");
+    QMessageBox::critical(this, "Request timed out!", "The server did not respond within five seconds. Please check your network or try later");
 
     // 恢复UI状态，让用户可以重新尝试
     ui->loginButton->setEnabled(true);
     ui->registerButton->setEnabled(true);
-    ui->loginButton->setText("登录");
+    ui->loginButton->setText("Login");
 }
