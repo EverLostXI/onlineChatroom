@@ -1,5 +1,6 @@
 #include "networkmanager.h"
 #include <QDebug>
+#include "ChatMsg.hpp"
 #include "mainwindow.h"
 
 // --- 单例实现 ---

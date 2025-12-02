@@ -117,7 +117,7 @@ public:
         backButton->setText(QCoreApplication::translate("RegisterDialog", "Cancel", nullptr));
         label->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Username</span></p></body></html>", nullptr));
         label_2->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Set Password</span></p></body></html>", nullptr));
-        label_3->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:14pt;\">Confirm Password</span></p></body></html>", nullptr));
+        label_3->setText(QCoreApplication::translate("RegisterDialog", "<html><head/><body><p><span style=\" font-size:11pt;\">Confirm Password</span></p></body></html>", nullptr));
     } // retranslateUi
 
 };

@@ -90,13 +90,20 @@
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>219</y>
-     <width>91</width>
-     <height>41</height>
+     <x>30</x>
+     <y>189</y>
+     <width>121</width>
+     <height>71</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QPushButton" name="connectButton">
+      <property name="text">
+       <string>Connect to server</string>
+      </property>
+     </widget>
+    </item>
     <item>
      <widget class="QPushButton" name="setServerButton">
       <property name="text">

@@ -12,8 +12,13 @@ class SetServerDialog : public QDialog
     Q_OBJECT
 
 public:
+    static SetServerDialog& instance();
+
     explicit SetServerDialog(QWidget *parent = nullptr);
     ~SetServerDialog();
+
+signals:
+    void serverEndPoint(QString serverAddress,quint16 serverPort);
 
 private slots:
     void on_confirmButton_clicked();

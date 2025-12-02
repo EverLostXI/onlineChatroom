@@ -5,7 +5,8 @@
 #include "RegisterDialog.h"
 #include "ui_registerdialog.h"
 #include "SetServerDialog.h"
-#include "ui_SetServerDialog.h"
+#include "MainWindow.h"
+#include "SetServerDialog.h"
 
 LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent)
@@ -13,6 +14,8 @@ LoginDialog::LoginDialog(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("Login");
+
+    //connect(&SetServerDialog::);
 
     // --- 核心：建立UI与NetworkManager之间的通信桥梁 ---
     // 获取NetworkManager的单例
@@ -28,12 +31,6 @@ LoginDialog::LoginDialog(QWidget *parent)
 
     // === 新增代码：连接超时信号 ===
     connect(&netManager, &NetworkManager::requestTimeout, this, &LoginDialog::onRequestTimeout);
-
-    // 2. (可选但推荐) 启动程序时就尝试连接服务器
-    //    这样用户在输入账号密码时，连接可能已经建立好了，体验更流畅
-    //    请将 "127.0.0.1" 和 8888 替换为你的服务器实际IP和端口
-    netManager.connectToServer("127.0.0.1", 8888);
-
 }
 
 LoginDialog::~LoginDialog()
@@ -120,15 +117,22 @@ void LoginDialog::on_registerButton_clicked()
 
 }
 
-// --- 响应NetworkManager信号的槽函数实现 ---
+void LoginDialog::on_connectButton_clicked()
+{
+    /*NetworkManager& netManager = NetworkManager::instance();
+    QString host = SetServerDialog::getInstance().serverAddress;
+    quint16 port = SetServerDialog::getInstance().serverPort;
+    netManager.connectToServer(host, port);
+    */
+}
 
 // 当收到登录成功信号时
 void LoginDialog::onLoginSuccess()
 {
-    // 登录成功，关闭对话框并返回Accepted
-    // exec()的调用处会收到这个结果，从而知道可以进入主界面了
     QMessageBox::information(this, "Success!", "Login successful！");
-    accept();
+    this->close();
+    MainWindow *mainWindow = new MainWindow();
+    mainWindow->show();
 }
 
 // 当收到登录失败信号时

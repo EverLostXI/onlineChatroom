@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include <QTimer>      // <--- 1. 添加 QTimer 头文件
-#include "chatMsg.hpp" // <-- 改成这个正确的文件名
+#include <QTimer>
 #include "mainwindow.h"
 //static uint8_t selfId();
 class NetworkManager : public QObject
