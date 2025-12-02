@@ -192,8 +192,8 @@ public:
     static Packet makeAddFriendRe(uint8_t sendId, uint8_t targetId, bool s)
     {
         Packet p(MsgType::AddFriendRe);
-        p.hdr.sendid = sendId;   // 这里sendId是最初发起请求的人
-        p.hdr.recvid = targetId; // 这里recvid通常是做出响应的人（被添加者）
+        p.hdr.sendid = targetId;   // 这里sendId是最初发起请求的人
+        p.hdr.recvid = sendId; // 这里recvid通常是做出响应的人（被添加者）
         p.hdr.success = s;
         p.finish();
         return p;
@@ -348,7 +348,6 @@ private:
     /* 向变长区1写入字符串 */
     void writeField1(const std::string& s){ writeField(field1, s); }
     
-
     /* 向变长区2写入字符串 */
     void writeField2(const std::string& s){ writeField(field2, s); }
 

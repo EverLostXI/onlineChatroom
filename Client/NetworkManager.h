@@ -26,6 +26,8 @@ public:
     void sendGroupMessage(uint8_t selfId, const QString& groupId, const QString& text);
     void sendCreateGroupRequest(const QString& groupName, const QVector<uint8_t>& memberIds);
     uint8_t selfId(); // 改为普通成员函数
+    // === 新增：公共的 "setter" 函数 ===
+    void setCurrentUserId(uint8_t userId);
 
 signals:
     // --- 信号 (用来通知UI) ---
@@ -68,6 +70,9 @@ private:
     QByteArray m_buffer;
     QTimer* m_requestTimer;
     QTimer* m_heartbeatTimer;
+    // === 新增：用于存储当前用户ID的成员变量 ===
+    uint8_t m_currentUserId = 0; // 默认给一个无效值0
+
 };
 
 #endif // NETWORKMANAGER_H

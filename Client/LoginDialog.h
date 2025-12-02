@@ -35,6 +35,8 @@ private slots:
 
 private:
     Ui::LoginDialog *ui;
+    // === 新增：临时存储尝试登录的ID ===
+    uint8_t m_attemptingUserId;
 
 };
 

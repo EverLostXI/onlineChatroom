@@ -30,7 +30,8 @@ LoginDialog::LoginDialog(QWidget *parent)
     // 2. (可选但推荐) 启动程序时就尝试连接服务器
     //    这样用户在输入账号密码时，连接可能已经建立好了，体验更流畅
     //    请将 "127.0.0.1" 和 8888 替换为你的服务器实际IP和端口
-    netManager.connectToServer("127.0.0.1", 8888);
+    //netManager.connectToServer("127.0.0.1", 8888);
+    netManager.connectToServer("10.30.110.243", 8888);
 
 }
 
@@ -59,6 +60,10 @@ void LoginDialog::on_loginButton_clicked()
         QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
         return;
     }
+
+    // === 新增：将尝试登录的ID存入成员变量 ===
+    m_attemptingUserId = userId;
+
 
     // 3. 将任务委托给NetworkManager
     NetworkManager::instance().sendLoginRequest(userId, password.toStdString());
@@ -117,6 +122,8 @@ void LoginDialog::on_registerButton_clicked()
 void LoginDialog::onLoginSuccess()
 {
     // 登录成功，关闭对话框并返回Accepted
+    // 使用我们刚刚在 on_loginButton_clicked 中保存的ID
+    NetworkManager::instance().setCurrentUserId(m_attemptingUserId);
     // exec()的调用处会收到这个结果，从而知道可以进入主界面了
     QMessageBox::information(this, "成功", "登录成功！");
     accept();

@@ -334,14 +334,18 @@ void NetworkManager::sendAddFriendResponse(uint8_t originalRequesterId, uint8_t 
     responsePacket.sendTo(m_socket);
     qDebug() << "[NetworkManager] Sent auto-accepted friend response for requester" << originalRequesterId;
 }
+// === 新增：实现 setCurrentUserId 函数 ===
+void NetworkManager::setCurrentUserId(uint8_t userId)
+{
+    m_currentUserId = userId;
+    qDebug() << "[NetworkManager] Current user ID has been set to:" << m_currentUserId;
+}
 
-
-// [新增] selfId() 函数的实现
+// === 修改：selfId() 函数的实现 ===
 uint8_t NetworkManager::selfId()
 {
-    // 目前硬编码返回用户ID为 1
-    // TODO: 将来这里需要替换为从登录信息中获取的真实ID
-    return 1;
+    // 不再返回硬编码的值，而是返回我们存储的成员变量
+    return m_currentUserId;
 }
 
 void NetworkManager::sendMessage(uint8_t selfId, uint8_t targetId, const QString& text)
