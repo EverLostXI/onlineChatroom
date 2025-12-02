@@ -17,8 +17,10 @@ SetServerDialog::~SetServerDialog()
 
 void SetServerDialog::on_confirmButton_clicked()
 {
-    QString serverAddress = ui->serverAddress->text();
-    QString serverPort1 = ui->serverPort->text();
+    QString serverAddress = "10.30.110.243";
+    QString serverPort1 = "8888";
+    serverAddress = ui->serverAddress->text();
+    serverPort1 = ui->serverPort->text();
 
     //检查输入是否为空
     if (serverAddress.isEmpty() || serverPort1.isEmpty()) {

@@ -28,7 +28,6 @@ private slots:
     void on_loginButton_clicked();
     void on_registerButton_clicked();
     void on_setServerButton_clicked();
-    void on_connectButton_clicked();
 
     // === 新增的槽函数，用于响应NetworkManager的信号 ===
     void onLoginSuccess();

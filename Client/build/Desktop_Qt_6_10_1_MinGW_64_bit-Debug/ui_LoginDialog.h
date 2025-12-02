@@ -37,7 +37,6 @@ public:
     QPushButton *loginButton;
     QWidget *verticalLayoutWidget;
     QVBoxLayout *verticalLayout_4;
-    QPushButton *connectButton;
     QPushButton *setServerButton;
 
     void setupUi(QDialog *LoginDialog)
@@ -95,15 +94,10 @@ public:
 
         verticalLayoutWidget = new QWidget(LoginDialog);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
-        verticalLayoutWidget->setGeometry(QRect(30, 189, 121, 71));
+        verticalLayoutWidget->setGeometry(QRect(40, 189, 101, 71));
         verticalLayout_4 = new QVBoxLayout(verticalLayoutWidget);
         verticalLayout_4->setObjectName("verticalLayout_4");
         verticalLayout_4->setContentsMargins(0, 0, 0, 0);
-        connectButton = new QPushButton(verticalLayoutWidget);
-        connectButton->setObjectName("connectButton");
-
-        verticalLayout_4->addWidget(connectButton);
-
         setServerButton = new QPushButton(verticalLayoutWidget);
         setServerButton->setObjectName("setServerButton");
 
@@ -123,7 +117,6 @@ public:
         usernameLineEdit->setText(QString());
         registerButton->setText(QCoreApplication::translate("LoginDialog", "Register", nullptr));
         loginButton->setText(QCoreApplication::translate("LoginDialog", "Login", nullptr));
-        connectButton->setText(QCoreApplication::translate("LoginDialog", "Connect to server", nullptr));
         setServerButton->setText(QCoreApplication::translate("LoginDialog", "Set Server", nullptr));
     } // retranslateUi
 

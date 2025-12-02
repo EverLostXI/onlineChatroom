@@ -117,15 +117,6 @@ void LoginDialog::on_registerButton_clicked()
 
 }
 
-void LoginDialog::on_connectButton_clicked()
-{
-    /*NetworkManager& netManager = NetworkManager::instance();
-    QString host = SetServerDialog::getInstance().serverAddress;
-    quint16 port = SetServerDialog::getInstance().serverPort;
-    netManager.connectToServer(host, port);
-    */
-}
-
 // 当收到登录成功信号时
 void LoginDialog::onLoginSuccess()
 {

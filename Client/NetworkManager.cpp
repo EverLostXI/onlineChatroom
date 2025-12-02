@@ -24,6 +24,12 @@ NetworkManager::NetworkManager(QObject *parent) : QObject(parent)
     m_requestTimer = new QTimer(this);
     m_requestTimer->setSingleShot(true); // 设置为单次触发定时器
     connect(m_requestTimer, &QTimer::timeout, this, &NetworkManager::onRequestTimeout);
+
+    /*NetworkManager& netManager = NetworkManager::instance();
+    QString host = SetServerDialog::getInstance().serverAddress;
+    quint16 port = SetServerDialog::getInstance().serverPort;
+    netManager.connectToServer(host, port);
+    */
 }
 
 NetworkManager::~NetworkManager()
