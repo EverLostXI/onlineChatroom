@@ -1,6 +1,0 @@
-# ninja log v7
-2	2174	7857851765336479	CMakeFiles/chat_server.dir/server.cpp.obj	1ce61b13f9edfaff
-11	1774	7857852037149385	CMakeFiles/chat_client.dir/client.cpp.obj	8fe6fac0852340a1
-6	2094	7857852037097813	CMakeFiles/chat_server.dir/server.cpp.obj	1ce61b13f9edfaff
-1775	2651	7857852054789082	chat_client.exe	f9b35e6572fd3a9a
-2094	2957	7857852057981742	chat_server.exe	80903db0995b9845
