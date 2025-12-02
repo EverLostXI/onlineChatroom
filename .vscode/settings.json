@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "D:/Projects/Server",
+    "cmake.sourceDirectory": "D:/Projects/Chatroom/Server",
     "files.associations": {
         "array": "cpp",
         "atomic": "cpp",

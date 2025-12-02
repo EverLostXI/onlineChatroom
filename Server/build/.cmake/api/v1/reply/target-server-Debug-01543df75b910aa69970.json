@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "chat_server.exe"
+			"path" : "server.exe"
 		},
 		{
-			"path" : "chat_server.pdb"
+			"path" : "server.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -28,13 +28,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 9,
+				"line" : 7,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 13,
+				"line" : 10,
 				"parent" : 0
 			}
 		]
@@ -50,7 +50,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -std=c++17"
+					"fragment" : "-g -std=gnu++17"
 				}
 			],
 			"language" : "CXX",
@@ -68,7 +68,7 @@
 			]
 		}
 	],
-	"id" : "chat_server::@6890427a1f51a3e7e1df",
+	"id" : "server::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -96,8 +96,8 @@
 			"fragment" : "ws2_32"
 		}
 	],
-	"name" : "chat_server",
-	"nameOnDisk" : "chat_server.exe",
+	"name" : "server",
+	"nameOnDisk" : "server.exe",
 	"paths" : 
 	{
 		"build" : ".",

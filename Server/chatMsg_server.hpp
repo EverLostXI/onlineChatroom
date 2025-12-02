@@ -158,7 +158,7 @@ public:
     static Packet Message(uint8_t Sendid, 
                           uint8_t Recvid,
                           const std::string& textbody,
-                          const std::string& timestamp)
+                          const std::string& timestamp = "")
     {
         Packet p(MsgType::NormalMsg);
         p.hdr.sendid = Sendid;

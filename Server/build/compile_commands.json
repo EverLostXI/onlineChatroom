@@ -1,8 +1,8 @@
 [
 {
-  "directory": "D:/Projects/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=c++17 -o CMakeFiles\\chat_server.dir\\server.cpp.obj -c D:\\Projects\\Server\\server.cpp",
-  "file": "D:/Projects/Server/server.cpp",
-  "output": "D:/Projects/Server/build/CMakeFiles/chat_server.dir/server.cpp.obj"
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\server.cpp.obj -c D:\\Projects\\Chatroom\\Server\\server.cpp",
+  "file": "D:/Projects/Chatroom/Server/server.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/server.cpp.obj"
 }
 ]
