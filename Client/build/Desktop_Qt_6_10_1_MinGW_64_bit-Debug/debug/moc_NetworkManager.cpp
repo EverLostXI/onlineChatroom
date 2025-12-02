@@ -8,6 +8,7 @@
 
 #include "../../../NetworkManager.h"
 #include <QtCore/qmetatype.h>
+#include <QtCore/QList>
 
 #include <QtCore/qtmochelpers.h>
 
@@ -44,27 +45,31 @@ template <> constexpr inline auto NetworkManager::qt_create_metaobjectdata<qt_me
         "disconnected",
         "loginSuccess",
         "loginFailed",
-        "registrationSuccess",
-        "registrationFailed",
-        "addFriendResult",
+        "requestTimeout",
+        "registrationResult",
         "success",
+        "message",
+        "addFriendResult",
         "uint8_t",
         "friendId",
         "autoAcceptFriendRequest",
         "requesterId",
         "newMessageReceived",
         "ChatMessage",
-        "message",
         "conversationId",
-        "requestTimeout",
-        "registrationResult",
+        "createGroupResult",
+        "addedToNewGroup",
+        "groupName",
+        "creatorId",
+        "QList<uint8_t>",
+        "memberIds",
+        "onRegistrationRequested",
+        "username",
+        "password",
         "onConnected",
         "onDisconnected",
         "onReadyRead",
-        "onRequestTimeout",
-        "onRegistrationRequested",
-        "username",
-        "password"
+        "onRequestTimeout"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -76,40 +81,44 @@ template <> constexpr inline auto NetworkManager::qt_create_metaobjectdata<qt_me
         QtMocHelpers::SignalData<void()>(4, 2, QMC::AccessPublic, QMetaType::Void),
         // Signal 'loginFailed'
         QtMocHelpers::SignalData<void()>(5, 2, QMC::AccessPublic, QMetaType::Void),
-        // Signal 'registrationSuccess'
+        // Signal 'requestTimeout'
         QtMocHelpers::SignalData<void()>(6, 2, QMC::AccessPublic, QMetaType::Void),
-        // Signal 'registrationFailed'
-        QtMocHelpers::SignalData<void()>(7, 2, QMC::AccessPublic, QMetaType::Void),
+        // Signal 'registrationResult'
+        QtMocHelpers::SignalData<void(bool, const QString &)>(7, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Bool, 8 }, { QMetaType::QString, 9 },
+        }}),
         // Signal 'addFriendResult'
-        QtMocHelpers::SignalData<void(bool, uint8_t)>(8, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Bool, 9 }, { 0x80000000 | 10, 11 },
+        QtMocHelpers::SignalData<void(bool, uint8_t)>(10, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Bool, 8 }, { 0x80000000 | 11, 12 },
         }}),
         // Signal 'autoAcceptFriendRequest'
-        QtMocHelpers::SignalData<void(uint8_t)>(12, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 10, 13 },
+        QtMocHelpers::SignalData<void(uint8_t)>(13, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 11, 14 },
         }}),
         // Signal 'newMessageReceived'
-        QtMocHelpers::SignalData<void(const ChatMessage &, int)>(14, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 15, 16 }, { QMetaType::Int, 17 },
+        QtMocHelpers::SignalData<void(const ChatMessage &, const QString &)>(15, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 16, 9 }, { QMetaType::QString, 17 },
         }}),
-        // Signal 'requestTimeout'
-        QtMocHelpers::SignalData<void()>(18, 2, QMC::AccessPublic, QMetaType::Void),
-        // Signal 'registrationResult'
-        QtMocHelpers::SignalData<void(bool, const QString &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::Bool, 9 }, { QMetaType::QString, 16 },
+        // Signal 'createGroupResult'
+        QtMocHelpers::SignalData<void(bool, const QString &)>(18, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Bool, 8 }, { QMetaType::QString, 9 },
         }}),
-        // Slot 'onConnected'
-        QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onDisconnected'
-        QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onReadyRead'
-        QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onRequestTimeout'
-        QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Signal 'addedToNewGroup'
+        QtMocHelpers::SignalData<void(const QString &, uint8_t, const QVector<uint8_t> &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 20 }, { 0x80000000 | 11, 21 }, { 0x80000000 | 22, 23 },
+        }}),
         // Slot 'onRegistrationRequested'
         QtMocHelpers::SlotData<void(const QString &, const QString &)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 25 }, { QMetaType::QString, 26 },
         }}),
+        // Slot 'onConnected'
+        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onDisconnected'
+        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onReadyRead'
+        QtMocHelpers::SlotData<void()>(29, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onRequestTimeout'
+        QtMocHelpers::SlotData<void()>(30, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -137,18 +146,18 @@ void NetworkManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         case 1: _t->disconnected(); break;
         case 2: _t->loginSuccess(); break;
         case 3: _t->loginFailed(); break;
-        case 4: _t->registrationSuccess(); break;
-        case 5: _t->registrationFailed(); break;
+        case 4: _t->requestTimeout(); break;
+        case 5: _t->registrationResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 6: _t->addFriendResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2]))); break;
         case 7: _t->autoAcceptFriendRequest((*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[1]))); break;
-        case 8: _t->newMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[2]))); break;
-        case 9: _t->requestTimeout(); break;
-        case 10: _t->registrationResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 11: _t->onConnected(); break;
-        case 12: _t->onDisconnected(); break;
-        case 13: _t->onReadyRead(); break;
-        case 14: _t->onRequestTimeout(); break;
-        case 15: _t->onRegistrationRequested((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 8: _t->newMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 9: _t->createGroupResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 10: _t->addedToNewGroup((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<uint8_t>>>(_a[3]))); break;
+        case 11: _t->onRegistrationRequested((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 12: _t->onConnected(); break;
+        case 13: _t->onDisconnected(); break;
+        case 14: _t->onReadyRead(); break;
+        case 15: _t->onRequestTimeout(); break;
         default: ;
         }
     }
@@ -161,19 +170,19 @@ void NetworkManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
             return;
         if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)()>(_a, &NetworkManager::loginFailed, 3))
             return;
-        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)()>(_a, &NetworkManager::registrationSuccess, 4))
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)()>(_a, &NetworkManager::requestTimeout, 4))
             return;
-        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)()>(_a, &NetworkManager::registrationFailed, 5))
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(bool , const QString & )>(_a, &NetworkManager::registrationResult, 5))
             return;
         if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(bool , uint8_t )>(_a, &NetworkManager::addFriendResult, 6))
             return;
         if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(uint8_t )>(_a, &NetworkManager::autoAcceptFriendRequest, 7))
             return;
-        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(const ChatMessage & , int )>(_a, &NetworkManager::newMessageReceived, 8))
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(const ChatMessage & , const QString & )>(_a, &NetworkManager::newMessageReceived, 8))
             return;
-        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)()>(_a, &NetworkManager::requestTimeout, 9))
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(bool , const QString & )>(_a, &NetworkManager::createGroupResult, 9))
             return;
-        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(bool , const QString & )>(_a, &NetworkManager::registrationResult, 10))
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(const QString & , uint8_t , const QVector<uint8_t> & )>(_a, &NetworkManager::addedToNewGroup, 10))
             return;
     }
 }
@@ -234,15 +243,15 @@ void NetworkManager::loginFailed()
 }
 
 // SIGNAL 4
-void NetworkManager::registrationSuccess()
+void NetworkManager::requestTimeout()
 {
     QMetaObject::activate(this, &staticMetaObject, 4, nullptr);
 }
 
 // SIGNAL 5
-void NetworkManager::registrationFailed()
+void NetworkManager::registrationResult(bool _t1, const QString & _t2)
 {
-    QMetaObject::activate(this, &staticMetaObject, 5, nullptr);
+    QMetaObject::activate<void>(this, &staticMetaObject, 5, nullptr, _t1, _t2);
 }
 
 // SIGNAL 6
@@ -258,20 +267,20 @@ void NetworkManager::autoAcceptFriendRequest(uint8_t _t1)
 }
 
 // SIGNAL 8
-void NetworkManager::newMessageReceived(const ChatMessage & _t1, int _t2)
+void NetworkManager::newMessageReceived(const ChatMessage & _t1, const QString & _t2)
 {
     QMetaObject::activate<void>(this, &staticMetaObject, 8, nullptr, _t1, _t2);
 }
 
 // SIGNAL 9
-void NetworkManager::requestTimeout()
+void NetworkManager::createGroupResult(bool _t1, const QString & _t2)
 {
-    QMetaObject::activate(this, &staticMetaObject, 9, nullptr);
+    QMetaObject::activate<void>(this, &staticMetaObject, 9, nullptr, _t1, _t2);
 }
 
 // SIGNAL 10
-void NetworkManager::registrationResult(bool _t1, const QString & _t2)
+void NetworkManager::addedToNewGroup(const QString & _t1, uint8_t _t2, const QVector<uint8_t> & _t3)
 {
-    QMetaObject::activate<void>(this, &staticMetaObject, 10, nullptr, _t1, _t2);
+    QMetaObject::activate<void>(this, &staticMetaObject, 10, nullptr, _t1, _t2, _t3);
 }
 QT_WARNING_POP
