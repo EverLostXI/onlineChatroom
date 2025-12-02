@@ -23,6 +23,11 @@ NetworkManager::NetworkManager(QObject *parent) : QObject(parent)
     m_requestTimer = new QTimer(this);
     m_requestTimer->setSingleShot(true); // 设置为单次触发定时器
     connect(m_requestTimer, &QTimer::timeout, this, &NetworkManager::onRequestTimeout);
+    // === 新增代码：初始化心跳定时器 ===
+    m_heartbeatTimer = new QTimer(this);
+    // 连接心跳定时器的 timeout 信号到我们新的槽函数
+    connect(m_heartbeatTimer, &QTimer::timeout, this, &NetworkManager::onSendHeartbeat);
+
 }
 
 NetworkManager::~NetworkManager()
@@ -90,12 +95,19 @@ void NetworkManager::onConnected()
 {
     qDebug() << "Successfully connected to server.";
     emit connected(); // 发出连接成功信号
+    // === 新增代码：连接成功后，启动15秒心跳定时器 ===
+    // start() 的参数是毫秒，15000毫秒 = 15秒
+    m_heartbeatTimer->start(15000);
+    qDebug() << "Heartbeat timer started (15 seconds interval).";
 }
 
 void NetworkManager::onDisconnected()
 {
     qDebug() << "Disconnected from server.";
     emit disconnected(); // 发出断开连接信号
+    // === 新增代码：断开连接后，停止心跳定时器 ===
+    m_heartbeatTimer->stop();
+    qDebug() << "Heartbeat timer stopped.";
 }
 
 void NetworkManager::onReadyRead()
@@ -384,3 +396,26 @@ void NetworkManager::sendGroupMessage(uint8_t selfId, const QString& groupId, co
     p.sendTo(m_socket);
 }
 
+// === 新增代码：实现发送心跳包的槽函数 ===
+void NetworkManager::onSendHeartbeat()
+{
+    // 检查socket是否仍然连接
+    if (m_socket->state() == QAbstractSocket::ConnectedState)
+    {
+        // 1. 使用你已经封装好的 Packet::makeHeartbeat() 创建一个心跳包
+        Packet heartbeatPacket = Packet::makeHeartbeat();
+
+        // 2. 发送它
+        heartbeatPacket.sendTo(m_socket);
+
+        // 3. 打印日志，方便调试
+        qDebug() << "Sent heartbeat packet.";
+    }
+    else
+    {
+        // 如果socket已经断开，但定时器还在运行（理论上不应该发生，因为onDisconnected会停止它）
+        // 那么就停止定时器
+        m_heartbeatTimer->stop();
+        qDebug() << "Socket disconnected, stopping heartbeat timer.";
+    }
+}

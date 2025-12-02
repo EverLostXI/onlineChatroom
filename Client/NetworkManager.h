@@ -51,6 +51,8 @@ private slots:
     void onDisconnected();
     void onReadyRead();
     void onRequestTimeout();
+    void onSendHeartbeat(); // <--- 1. 新增一个私有槽函数，用于发送心跳包
+
 
 private:
     // --- 私有构造/析构 ---
@@ -65,6 +67,7 @@ private:
     QTcpSocket* m_socket;
     QByteArray m_buffer;
     QTimer* m_requestTimer;
+    QTimer* m_heartbeatTimer;
 };
 
 #endif // NETWORKMANAGER_H
