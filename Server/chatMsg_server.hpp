@@ -1,5 +1,6 @@
 // 这个版本的chatmsg与客户端的工作逻辑相同，但是负责网络操作的部分不依赖qt
-// 由于链接Winsock
+// 由于服务器对于大部分消息只需要转发，所以相比起客户端版本删掉了一些构造数据包的函数（用不到）
+
 #pragma once // 由于是头文件所以需要防止重复包含
 #include <cstdint>
 #include <vector>
@@ -25,7 +26,8 @@ enum class MsgType : uint8_t
     AddFriendReq = 0x07,  // 添加好友请求
     AddFriendRe  = 0x08,  // 添加好友反馈
     Heartbeat    = 0x09,  // 心跳包
-    NormalMsg    = 0x10   // 普通消息
+    NormalMsg    = 0x10,   // 普通消息
+    GroupMsg     = 0x11    // 群聊消息
 };
 
 #pragma pack(push,1)
@@ -126,6 +128,26 @@ public:
         return p;
     }
 
+    /* 方法：创建群聊 (修改版) */
+    // 参数：idlist - 成员ID列表, groupName - 群聊名称
+    static Packet makeCreGro(uint8_t creatorId, const std::vector<uint8_t>& idlist, const std::string& groupName)
+    {
+        Packet p(MsgType::CreateGrope);
+
+        // [修改] 将创建者ID放入 sendid 字段
+        p.hdr.sendid = creatorId;
+
+        // Field 1: 存放其他成员ID列表 (二进制数据)
+        // 注意：这里的 const_cast 是安全的，因为 writeFieldRaw 不会修改数据
+        p.writeFieldRaw(p.field1, idlist.data(), idlist.size());
+
+        // Field 2: 存放群聊名称 (字符串)
+        p.writeField2(groupName);
+
+        p.finish();
+        return p;
+    }
+
     /* 方法：创建群聊反馈 */
     static Packet makeCreGroRe(bool s)
     {
@@ -165,6 +187,21 @@ public:
         p.hdr.recvid = Recvid;
         p.writeField1(textbody);
         if (!timestamp.empty()) p.writeField2(timestamp);
+        p.finish();
+        return p;
+    }
+
+    static Packet makeGroupMessage(uint8_t senderId, const std::string& groupId, const std::string& textbody, const std::string& timestamp)
+    {
+        Packet p(MsgType::GroupMsg);
+        p.hdr.sendid = senderId;
+        // recvid 在群聊消息中无意义，保持为0
+
+        p.writeField1(textbody);      // Field 1: 消息正文
+        p.writeField2(groupId);       // Field 2: 目标群ID (字符串)
+        if (!timestamp.empty()) {
+            p.writeField3(timestamp); // Field 3: 时间戳 (如果需要)
+        }
         p.finish();
         return p;
     }

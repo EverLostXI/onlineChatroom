@@ -24,9 +24,9 @@
 // #pragma comment(lib, "ws2_32.lib") 非MSVC编译器无法识别，必须手动链接Winsock库
 // 服务端已经用CMake链接
 
-// TODO: 注册时添加usersession = nullptr
+
 // TODO: 添加监视窗口，包含用户列表，群聊列表，在线客户端列表，usersession跟踪，手动控制map绑定
-// TODO：获取服务器ip地址的函数
+// TODO: 模块化功能
 // TODO：细化日志的消息类型和具体存储哪些内容
 // 设置服务器端口号
 const int PORT = 8888;
@@ -40,6 +40,25 @@ bool g_debugMode = true;
 
 // 为Packet添加Windows socket支持的补充函数
 // chatmsg中recv和send是用的qt封装的函数，由于server不依赖qt，只能重新写一个winsock版本的
+
+// 获取本机ip地址函数(要在创建了socket之后才调用)
+std::string GetServerIP() {
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) == SOCKET_ERROR) {
+        return "127.0.0.1";
+    }
+
+    struct hostent* host = gethostbyname(hostname);
+    if (host == nullptr || host->h_addr_list[0] == nullptr) {
+        return "127.0.0.1";
+    }
+
+    struct in_addr addr;
+    memcpy(&addr, host->h_addr_list[0], sizeof(struct in_addr));
+    return std::string(inet_ntoa(addr));
+}
+
+
 
 // 接收数据包函数
 bool RecvPacket(SOCKET sock, Packet& packet) {
@@ -158,6 +177,8 @@ enum class LogLevel { // 限定日志级别
     DEBUG_LEVEL, // 详细的调试信息
     TRACE_LEVEL // 追踪细致操作
 };
+
+// TODO: 更精准的日志
 
 std::string LevelToString(LogLevel level) { // 将日志级别转为字符串
     switch (level) {
@@ -284,21 +305,61 @@ public:
 
 
 
-// 存储ID与密码（ID统一为uint8长度）
+// 绑定ID与密码（ID统一为uint8长度）
 std::map<uint8_t, std::string> g_userCredentials;
 
 //将ID与用户对象对应（在线状态在这里判定：如果用户下线，它的会话会被删除以释放内存，这里的会话指针会被改为空指针。空指针=不在线）
 std::map<uint8_t, ClientSession*> g_userSessions;
 
 
-// 存储每个用户的离线消息队列（key: userId, value: 消息列表）
+// 存储每个用户的离线消息队列（key: userID, value: 消息列表）
 std::map<uint8_t, std::vector<Packet>> g_offlineMessages;
 
+// 记录群聊
+std::map<std::string, std::vector<uint8_t>> g_groupChat;
+
+
+// 检查用户是否存在
+inline bool CheckExist(uint8_t userID) {
+    if (g_userSessions.count(userID)) {
+        return true;
+    }
+    return false;
+}
+// 检查用户是否在线
+inline bool CheckOnline(uint8_t userID) {
+    if (g_userSessions[userID] == nullptr) {
+        return false;
+    }
+    return true;
+}
+// 先检查是否存在，再检查是否在线
+inline int CheckUser(uint8_t userID) {
+    if (!CheckExist(userID)) {
+        return 0;
+    } else if (!CheckOnline(userID)) {
+        return 1;
+    }
+    return 2;
+}
+
+// 注册函数: 1. 添加账户密码键值对 2. 给id绑定一个空的会话指针
+bool Signup(uint8_t userID, const std::string &password) {
+    if (CheckExist(userID)) { // 检查用户是否已经存在（id唯一）
+                    WriteLog(LogLevel::INFO_LEVEL, "账号创建失败 - 用户ID已存在: " + std::to_string(userID));
+                    return false;
+                } else {
+                    g_userCredentials[userID] = password;
+                    g_userSessions[userID] = nullptr;
+                    WriteLog(LogLevel::INFO_LEVEL, "账号创建成功 - 用户ID: " + std::to_string(userID));
+                    return true;
+                }
+}
 
 // 登录函数:1. 验证登录凭证，2. 将id与这个会话线程绑定
-bool LoginConnect(uint8_t userID, const std::string &inputPassword, ClientSession* session) {
-    if (g_userCredentials.count(userID)) { // 检查map中是否存有该用户ID
-        if (g_userCredentials[userID] == inputPassword) { // 如果存在，比较密码
+bool LoginConnect(uint8_t userID, const std::string &Password, ClientSession* session) {
+    if (CheckExist(userID)) { // 检查map中是否存有该用户ID
+        if (g_userCredentials[userID] == Password) { // 如果存在，比较密码
             g_userSessions[userID] = session;
             session->setID(userID);
             return true;
@@ -309,13 +370,23 @@ bool LoginConnect(uint8_t userID, const std::string &inputPassword, ClientSessio
 
 // 下线函数: 删除会话，把id绑定的会话指针改为空指针（这个函数只在会话登录了账户的情况下才要调用）
 void LogOff(uint8_t userID) {
-    if (g_userCredentials.count(userID)) {
-        if (g_userSessions.count(userID)) {
-            delete g_userSessions[userID];
-            g_userSessions[userID] = nullptr;
-        }
+    if (CheckExist(userID)) {
+        delete g_userSessions[userID];
+        g_userSessions[userID] = nullptr;
     }
 }
+
+// 创建群聊函数
+bool CreateGroup(std::string &groupName, std::vector<uint8_t> &memberList) {
+    // 先检查群聊存不存在
+    if (g_groupChat.count(groupName)) {
+        WriteLog(LogLevel::WARN_LEVEL, "群聊已经存在");
+        return false;
+    }
+    g_groupChat[groupName] = memberList;
+    return true;
+}
+
 
 // 存储离线消息: 如果发现接收者不在线，则把要发送的消息暂存到离线消息队列g_offlineMessages中
 void SaveOfflineMessages(uint8_t userID, Packet message) {
@@ -423,25 +494,17 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
                 break;
             }
             
-            // 创建账号请求
+            // 注册请求
             case MsgType::CreateAcc: {
-                // 从header获取userId，从field2获取密码
-                uint8_t userId = receivedPacket.getsendid();
+                // 从header获取userID，从field2获取密码
+                uint8_t userID = receivedPacket.getsendid();
                 std::string password = receivedPacket.getField2Str();
                 
-                WriteLog(LogLevel::INFO_LEVEL, "创建账号请求 - 用户ID: " + std::to_string(userId));
+                WriteLog(LogLevel::INFO_LEVEL, "创建账号请求 - 用户ID: " + std::to_string(userID));
                 
-                // 检查用户ID是否已存在
-                bool success;
-                if (g_userCredentials.count(userId)) {
-                    success = false;
-                    WriteLog(LogLevel::INFO_LEVEL, "账号创建失败 - 用户ID已存在: " + std::to_string(userId));
-                } else {
-                    g_userCredentials[userId] = password;
-                    success = true;
-                    WriteLog(LogLevel::INFO_LEVEL, "账号创建成功 - 用户ID: " + std::to_string(userId));
-                }
-
+                // 调用注册函数
+                bool success = Signup(userID, password);
+                
                 // 构造响应包并发送
                 Packet response = Packet::makeRegiRe(success);
                 SendPacket(clientSocket, response);
@@ -450,21 +513,21 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
 
             // 登录请求
             case MsgType::LoginReq: {
-                // 从header获取userId，从field2获取密码
-                uint8_t userId = receivedPacket.getsendid();
+                // 从header获取userID，从field2获取密码
+                uint8_t userID = receivedPacket.getsendid();
                 std::string password = receivedPacket.getField2Str();
                 
-                WriteLog(LogLevel::INFO_LEVEL, "登录请求 - 用户ID: " + std::to_string(userId) + ", 来源: " + clientInfo);
+                WriteLog(LogLevel::INFO_LEVEL, "登录请求 - 用户ID: " + std::to_string(userID) + ", 来源: " + clientInfo);
                 
-                // 执行登录与id绑定
-                bool logSuccess = LoginConnect(userId, password, sessionPtr);
+                // 调用登录函数
+                bool logSuccess = LoginConnect(userID, password, sessionPtr);
                 
                 // 构造响应包
                 Packet response = Packet::makeLoginRe(logSuccess);
                 if (logSuccess) {
-                    WriteLog(LogLevel::INFO_LEVEL, "用户登录成功: " + std::to_string(userId));
+                    WriteLog(LogLevel::INFO_LEVEL, "用户登录成功: " + std::to_string(userID));
                 } else {
-                    WriteLog(LogLevel::INFO_LEVEL, "用户登录失败: " + std::to_string(userId));
+                    WriteLog(LogLevel::INFO_LEVEL, "用户登录失败: " + std::to_string(userID));
                 }
                 
                 // 发送响应给客户端
@@ -472,45 +535,113 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
                 
                 // 如果登录成功，推送离线消息
                 if (logSuccess) {
-                    // 延迟1秒开始运行
+                    // 延迟3秒开始运行
                     std::this_thread::sleep_for(std::chrono::seconds(3));
-                    SendOfflineMessages(userId, sessionPtr);
+                    SendOfflineMessages(userID, sessionPtr);
                 }
                 break;
             }
 
-            // 普通聊天消息
-            case MsgType::NormalMsg: { 
-                // 检查用户是否已在线
-                if (g_userSessions[sessionPtr->userid] == nullptr) {
+            // 转发添加好友请求
+            case MsgType::AddFriendReq: {
+                // 检查本会话是否已在线
+                if (!CheckOnline(sessionPtr->userid)) {
+                    DebugWriteLog(LogLevel::DEBUG_LEVEL, "离线用户尝试发送消息: " + clientInfo);
+                    break;
+                }
+                
+                //
+                uint8_t senderID = receivedPacket.getsendid();
+                uint8_t receiverID = receivedPacket.getrecvid();
+                
+                DebugWriteLog(LogLevel::DEBUG_LEVEL, 
+                         "收到好友请求 - 发送者ID: " + std::to_string(senderID) + 
+                         ", 接收者ID: " + std::to_string(receiverID));
+                
+                // 转发消息给接收者
+                if (!g_userSessions.count(receiverID)) {
+                    WriteLog(LogLevel::TRACE_LEVEL, "发送的消息接收人不存在, 发送者ID: " + std::to_string(senderID));
+                } else if (g_userSessions[receiverID] == nullptr) {
+                    // 接收者不在线，保存为离线消息
+                    g_offlineMessages[receiverID].push_back(receivedPacket);
+                    WriteLog(LogLevel::TRACE_LEVEL, 
+                             "好友请求保存到离线列表 - 接收者ID: " + std::to_string(receiverID) + 
+                             ", 发送者ID: " + std::to_string(senderID));
+                } else {
+                    ClientSession* passSession = g_userSessions[receiverID];
+                    // 直接转发原始数据包
+                    SendPacket(passSession->socket_fd, receivedPacket);
+                    DebugWriteLog(LogLevel::TRACE_LEVEL, "请求已转发给用户ID: " + std::to_string(receiverID));
+                }
+                break;
+            }
+
+            // 转发好友响应
+            case MsgType::AddFriendRe: { 
+                // 检查本会话是否是否已在线
+                if (!CheckOnline(sessionPtr->userid)) {
                     DebugWriteLog(LogLevel::DEBUG_LEVEL, "离线用户尝试发送消息: " + clientInfo);
                     break;
                 }
                 
                 // 从header获取收发信息，从field1获取内容
-                uint8_t senderId = receivedPacket.getsendid();
-                uint8_t receiverId = receivedPacket.getrecvid();
+                uint8_t senderID = receivedPacket.getsendid();
+                uint8_t receiverID = receivedPacket.getrecvid();
+                
+                DebugWriteLog(LogLevel::DEBUG_LEVEL, 
+                         "收到好友响应 - 发送者ID: " + std::to_string(senderID) + 
+                         ", 接收者ID: " + std::to_string(receiverID));
+                
+                // 转发消息给接收者
+                if (!g_userSessions.count(receiverID)) {
+                    WriteLog(LogLevel::TRACE_LEVEL, "发送的响应接收人不存在, 发送者ID: " + std::to_string(senderID));
+                } else if (g_userSessions[receiverID] == nullptr) {
+                    // 接收者不在线，保存为离线消息
+                    g_offlineMessages[receiverID].push_back(receivedPacket);
+                    WriteLog(LogLevel::TRACE_LEVEL, 
+                             "响应保存到离线列表 - 接收者ID: " + std::to_string(receiverID) + 
+                             ", 发送者ID: " + std::to_string(senderID));
+                } else {
+                    ClientSession* passSession = g_userSessions[receiverID];
+                    // 直接转发原始数据包
+                    SendPacket(passSession->socket_fd, receivedPacket);
+                    DebugWriteLog(LogLevel::TRACE_LEVEL, "消息已转发给用户ID: " + std::to_string(receiverID));
+                }
+                break;
+            }
+
+            // 转发私聊聊天消息
+            case MsgType::NormalMsg: { 
+                // 检查本会话是否已在线
+                if (!CheckOnline(sessionPtr->userid)) {
+                    DebugWriteLog(LogLevel::DEBUG_LEVEL, "离线用户尝试发送消息: " + clientInfo);
+                    break;
+                }
+                
+                // 从header获取收发信息，从field1获取内容
+                uint8_t senderID = receivedPacket.getsendid();
+                uint8_t receiverID = receivedPacket.getrecvid();
                 std::string content = receivedPacket.getField1Str();
                 
                 DebugWriteLog(LogLevel::DEBUG_LEVEL, 
-                         "收到消息 - 发送者ID: " + std::to_string(senderId) + 
-                         ", 接收者ID: " + std::to_string(receiverId) + 
+                         "收到消息 - 发送者ID: " + std::to_string(senderID) + 
+                         ", 接收者ID: " + std::to_string(receiverID) + 
                          ", 内容: " + content);
                 
                 // 转发消息给接收者
-                if (!g_userSessions.count(receiverId)) {
-                    WriteLog(LogLevel::TRACE_LEVEL, "发送的消息接收人不存在, 发送者ID: " + std::to_string(senderId));
-                } else if (g_userSessions[receiverId] == nullptr) {
+                if (!g_userSessions.count(receiverID)) {
+                    WriteLog(LogLevel::TRACE_LEVEL, "发送的消息接收人不存在, 发送者ID: " + std::to_string(senderID));
+                } else if (g_userSessions[receiverID] == nullptr) {
                     // 接收者不在线，保存为离线消息
-                    g_offlineMessages[receiverId].push_back(receivedPacket);
+                    g_offlineMessages[receiverID].push_back(receivedPacket);
                     WriteLog(LogLevel::TRACE_LEVEL, 
-                             "保存离线消息 - 接收者ID: " + std::to_string(receiverId) + 
-                             ", 发送者ID: " + std::to_string(senderId));
+                             "保存离线消息 - 接收者ID: " + std::to_string(receiverID) + 
+                             ", 发送者ID: " + std::to_string(senderID));
                 } else {
-                    ClientSession* passSession = g_userSessions[receiverId];
+                    ClientSession* passSession = g_userSessions[receiverID];
                     // 直接转发原始数据包
                     SendPacket(passSession->socket_fd, receivedPacket);
-                    DebugWriteLog(LogLevel::TRACE_LEVEL, "消息已转发给用户ID: " + std::to_string(receiverId));
+                    DebugWriteLog(LogLevel::TRACE_LEVEL, "消息已转发给用户ID: " + std::to_string(receiverID));
                 }
                 break;
             }
@@ -518,88 +649,150 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
 
             // 创建群组请求
             case MsgType::CreateGrope: { // chatmsg里是grope所以就grope吧
-                if (g_userSessions[sessionPtr->userid] == nullptr) {
+                // 检测本会话是否在线
+                if (!CheckOnline(sessionPtr->userid)) {
                     DebugWriteLog(LogLevel::DEBUG_LEVEL, "未登录用户尝试创建群组");
                     break;
                 }
                 
                 WriteLog(LogLevel::INFO_LEVEL, "创建群组请求 - 发起者: " + sessionPtr->userid);
                 
-                // TODO: 处理群组创建逻辑
-                // 应该新建一个群组类，包含这个群组的id和成员列表，每次收到群聊消息，先检查这个群存不存在（应该不会不存在），
-                // 接下来把这条消息转发给这个群组除了发送人以外的其他所有成员（发送人本地应该有这条消息记录）
-                // 暂时返回成功
-                Packet response = Packet::makeCreGroRe(true);
+                uint8_t creatorID = receivedPacket.getsendid();
+                std::vector<uint8_t> memberList = receivedPacket.getField1();
+                std::string groupName = receivedPacket.getField2Str();
+
+                // 调用创建群聊函数
+                bool success = CreateGroup(groupName, memberList);
+
+                // 向群聊成员转发创建群聊消息（除了创建者自己）
+                if (success) {
+                    int forwardCount = 0;
+                    int offlineCount = 0;
+                    int notExistCount = 0;
+                    
+                    for (uint8_t memberID : memberList) {
+                        // 跳过创建者自己
+                        if (memberID == creatorID) {
+                            continue;
+                        }
+                        
+                        // 使用 CheckUser 检查成员状态
+                        int userStatus = CheckUser(memberID);
+                        
+                        switch (userStatus) {
+                            case 0:  // 用户不存在
+                                WriteLog(LogLevel::WARN_LEVEL, 
+                                         "群聊成员不存在 - 成员ID: " + std::to_string(memberID));
+                                notExistCount++;
+                                break;
+                                
+                            case 1:  // 用户存在但不在线
+                                // 保存为离线消息
+                                g_offlineMessages[memberID].push_back(receivedPacket);
+                                offlineCount++;
+                                DebugWriteLog(LogLevel::TRACE_LEVEL,
+                                             "群聊创建消息保存到离线队列 - 成员ID: " + std::to_string(memberID));
+                                break;
+                                
+                            case 2:  // 用户在线
+                                // 直接转发
+                                ClientSession* memberSession = g_userSessions[memberID];
+                                SendPacket(memberSession->socket_fd, receivedPacket);
+                                forwardCount++;
+                                DebugWriteLog(LogLevel::TRACE_LEVEL,
+                                             "群聊创建消息已转发 - 成员ID: " + std::to_string(memberID));
+                                break;
+                        }
+                    }
+                    
+                    WriteLog(LogLevel::INFO_LEVEL, 
+                             "群聊创建消息转发完成 - 在线转发: " + std::to_string(forwardCount) + 
+                             " 条，离线保存: " + std::to_string(offlineCount) + 
+                             " 条，不存在: " + std::to_string(notExistCount) + " 个");
+                }
+
+                // 向创建者返回成功
+                Packet response = Packet::makeCreGroRe(success);
                 SendPacket(clientSocket, response);
                 break;
             }
             
-            // 添加好友请求
-            case MsgType::AddFriendReq: {
-                // 检查用户是否已在线
-                if (g_userSessions[sessionPtr->userid] == nullptr) {
-                    DebugWriteLog(LogLevel::DEBUG_LEVEL, "离线用户尝试发送消息: " + clientInfo);
+            case MsgType::GroupMsg: {
+                // 检测本会话是否在线
+                if (!CheckOnline(sessionPtr->userid)) {
+                    DebugWriteLog(LogLevel::DEBUG_LEVEL, "未登录用户尝试发送群聊消息");
                     break;
                 }
-                
-                //
-                uint8_t senderId = receivedPacket.getsendid();
-                uint8_t receiverId = receivedPacket.getrecvid();
-                
-                DebugWriteLog(LogLevel::DEBUG_LEVEL, 
-                         "收到好友请求 - 发送者ID: " + std::to_string(senderId) + 
-                         ", 接收者ID: " + std::to_string(receiverId));
-                
-                // 转发消息给接收者
-                if (!g_userSessions.count(receiverId)) {
-                    WriteLog(LogLevel::TRACE_LEVEL, "发送的消息接收人不存在, 发送者ID: " + std::to_string(senderId));
-                } else if (g_userSessions[receiverId] == nullptr) {
-                    // 接收者不在线，保存为离线消息
-                    g_offlineMessages[receiverId].push_back(receivedPacket);
-                    WriteLog(LogLevel::TRACE_LEVEL, 
-                             "好友请求保存到离线列表 - 接收者ID: " + std::to_string(receiverId) + 
-                             ", 发送者ID: " + std::to_string(senderId));
-                } else {
-                    ClientSession* passSession = g_userSessions[receiverId];
-                    // 直接转发原始数据包
-                    SendPacket(passSession->socket_fd, receivedPacket);
-                    DebugWriteLog(LogLevel::TRACE_LEVEL, "请求已转发给用户ID: " + std::to_string(receiverId));
+
+                uint8_t senderID = receivedPacket.getsendid();
+                std::string groupName = receivedPacket.getField2Str();
+                std::string messageContent = receivedPacket.getField1Str();
+
+                DebugWriteLog(LogLevel::DEBUG_LEVEL,
+                             "收到群聊消息 - 发送者ID: " + std::to_string(senderID) +
+                             ", 群聊名称: " + groupName +
+                             ", 内容: " + messageContent);
+
+                // 检查群聊是否存在
+                if (!g_groupChat.count(groupName)) {
+                    WriteLog(LogLevel::WARN_LEVEL, 
+                             "群聊不存在 - 群聊名称: " + groupName + 
+                             ", 发送者ID: " + std::to_string(senderID));
+                    break;
                 }
+
+                // 获取群成员列表
+                std::vector<uint8_t>& memberList = g_groupChat[groupName];
+                
+                // 转发消息给除发送者外的所有群成员
+                int forwardCount = 0;
+                int offlineCount = 0;
+                int notExistCount = 0;
+                
+                for (uint8_t memberID : memberList) {
+                    // 跳过发送者自己
+                    if (memberID == senderID) {
+                        continue;
+                    }
+                    
+                    // 使用 CheckUser 检查成员状态
+                    int userStatus = CheckUser(memberID);
+                    
+                    switch (userStatus) {
+                        case 0:  // 用户不存在
+                            WriteLog(LogLevel::WARN_LEVEL, 
+                                     "群成员不存在 - 成员ID: " + std::to_string(memberID) +
+                                     ", 群聊: " + groupName);
+                            notExistCount++;
+                            break;
+                            
+                        case 1:  // 用户存在但不在线
+                            // 保存为离线消息
+                            g_offlineMessages[memberID].push_back(receivedPacket);
+                            offlineCount++;
+                            DebugWriteLog(LogLevel::TRACE_LEVEL,
+                                         "群聊消息保存到离线队列 - 成员ID: " + std::to_string(memberID));
+                            break;
+                            
+                        case 2:  // 用户在线
+                            // 直接转发
+                            ClientSession* memberSession = g_userSessions[memberID];
+                            SendPacket(memberSession->socket_fd, receivedPacket);
+                            forwardCount++;
+                            DebugWriteLog(LogLevel::TRACE_LEVEL,
+                                         "群聊消息已转发 - 成员ID: " + std::to_string(memberID));
+                            break;
+                    }
+                }
+                
+                WriteLog(LogLevel::INFO_LEVEL, 
+                         "群聊消息转发完成 - 群聊: " + groupName + 
+                         ", 在线转发: " + std::to_string(forwardCount) + 
+                         " 条，离线保存: " + std::to_string(offlineCount) + 
+                         " 条，不存在: " + std::to_string(notExistCount) + " 个");
                 break;
             }
             
-            case MsgType::AddFriendRe: { // 添加好友响应
-                // 检查用户是否已在线
-                if (g_userSessions[sessionPtr->userid] == nullptr) {
-                    DebugWriteLog(LogLevel::DEBUG_LEVEL, "离线用户尝试发送消息: " + clientInfo);
-                    break;
-                }
-                
-                // 从header获取收发信息，从field1获取内容
-                uint8_t senderId = receivedPacket.getsendid();
-                uint8_t receiverId = receivedPacket.getrecvid();
-                
-                DebugWriteLog(LogLevel::DEBUG_LEVEL, 
-                         "收到好友响应 - 发送者ID: " + std::to_string(senderId) + 
-                         ", 接收者ID: " + std::to_string(receiverId));
-                
-                // 转发消息给接收者
-                if (!g_userSessions.count(receiverId)) {
-                    WriteLog(LogLevel::TRACE_LEVEL, "发送的响应接收人不存在, 发送者ID: " + std::to_string(senderId));
-                } else if (g_userSessions[receiverId] == nullptr) {
-                    // 接收者不在线，保存为离线消息
-                    g_offlineMessages[receiverId].push_back(receivedPacket);
-                    WriteLog(LogLevel::TRACE_LEVEL, 
-                             "响应保存到离线列表 - 接收者ID: " + std::to_string(receiverId) + 
-                             ", 发送者ID: " + std::to_string(senderId));
-                } else {
-                    ClientSession* passSession = g_userSessions[receiverId];
-                    // 直接转发原始数据包
-                    SendPacket(passSession->socket_fd, receivedPacket);
-                    DebugWriteLog(LogLevel::TRACE_LEVEL, "消息已转发给用户ID: " + std::to_string(receiverId));
-                }
-                break;
-            }
             default: {
                 WriteLog(LogLevel::WARN_LEVEL, 
                          "未知消息类型: " + std::to_string(static_cast<int>(receivedPacket.type())));
@@ -646,6 +839,11 @@ int main() {
         return 1;
     }
     WriteLog(LogLevel::INFO_LEVEL, "Socket 创建成功");
+
+    // 获取本机IP地址（方便给客户端看）
+    std::string serverIP = GetServerIP();
+
+    WriteLog(LogLevel::INFO_LEVEL, "服务器IP: " + serverIP);
 
     // 调用配置地址函数
     sockaddr_in service_address;
