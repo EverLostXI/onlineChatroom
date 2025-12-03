@@ -1,6 +1,4 @@
 #include "logindialog.h"
-#include "registerdialog.h"
-#include "networkmanager.h"
 #include "MainWindow.h"
 
 #include <QApplication>

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -39,12 +39,12 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>160</x>
      <y>40</y>
-     <width>231</width>
+     <width>211</width>
      <height>141</height>
     </rect>
    </property>
@@ -61,12 +61,12 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>160</x>
      <y>200</y>
-     <width>211</width>
+     <width>201</width>
      <height>54</height>
     </rect>
    </property>
@@ -87,13 +87,25 @@
     </item>
    </layout>
   </widget>
-  <zorder>usernameLineEdit</zorder>
-  <zorder>passwordLineEdit</zorder>
-  <zorder>passwordLineEdit</zorder>
-  <zorder>label_2</zorder>
-  <zorder>loginButton</zorder>
-  <zorder>label</zorder>
-  <zorder>registerButton</zorder>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>190</y>
+     <width>111</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QPushButton" name="setServerButton">
+      <property name="text">
+       <string>Server setting</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

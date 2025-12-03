@@ -4,12 +4,12 @@ debug/LoginDialog.o
 debug/MainWindow.o
 debug/NetworkManager.o
 debug/RegisterDialog.o
+debug/SetServerDialog.o
 debug/main.o
-debug/widget.o
 debug/moc_AddFriendDialog.o
 debug/moc_CreateGroupDialog.o
 debug/moc_LoginDialog.o
 debug/moc_MainWindow.o
 debug/moc_NetworkManager.o
 debug/moc_RegisterDialog.o
-debug/moc_widget.o
+debug/moc_SetServerDialog.o

@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "RegisterDialog.h"
 #include "ui_registerdialog.h"
+#include "SetServerDialog.h"
 
 LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent)
@@ -29,15 +30,21 @@ LoginDialog::LoginDialog(QWidget *parent)
 
     // 2. (可选但推荐) 启动程序时就尝试连接服务器
     //    这样用户在输入账号密码时，连接可能已经建立好了，体验更流畅
-    //    请将 "127.0.0.1" 和 8888 替换为你的服务器实际IP和端口
-    //netManager.connectToServer("127.0.0.1", 8888);
-    netManager.connectToServer("10.30.110.243", 8888);
+
+    QString host = "10.30.110.243";
+    quint16 port = 8888;
+    netManager.connectToServer(host, port);
 
 }
 
 LoginDialog::~LoginDialog()
 {
     delete ui;
+}
+
+void LoginDialog::on_setServerButton_clicked(){
+    SetServerDialog setServerDialog;
+    setServerDialog.exec();
 }
 
 // 当用户点击“登录”按钮时
