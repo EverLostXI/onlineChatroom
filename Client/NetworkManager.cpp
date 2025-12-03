@@ -38,10 +38,19 @@ NetworkManager::~NetworkManager()
 // --- 公共接口实现 ---
 void NetworkManager::connectToServer(const QString& host, quint16 port)
 {
-    if (m_socket->state() == QAbstractSocket::UnconnectedState) {
-        qDebug() << "Connecting to server:" << host << port;
-        m_socket->connectToHost(host, port);
+    // 修改前：只在未连接时才连接
+    // if (m_socket->state() == QAbstractSocket::UnconnectedState) {
+
+    // 修改后：如果已连接或正在连接，先断开旧连接
+    if (m_socket->state() != QAbstractSocket::UnconnectedState) {
+        m_socket->disconnectFromHost();
+        if (m_socket->state() != QAbstractSocket::UnconnectedState) {
+            m_socket->waitForDisconnected(1000); // 等待1秒断开
+        }
     }
+
+    qDebug() << "Connecting to server:" << host << port;
+    m_socket->connectToHost(host, port);
 }
 
 void NetworkManager::sendLoginRequest(uint8_t userId, const std::string& password)
