@@ -100,7 +100,7 @@
     <item>
      <widget class="QPushButton" name="setServerButton">
       <property name="text">
-       <string>Server setting</string>
+       <string>服务器设置</string>
       </property>
      </widget>
     </item>

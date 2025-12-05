@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowTitle("开始聊天");
     // ...
     connect(&NetworkManager::instance(), &NetworkManager::autoAcceptFriendRequest, this, &MainWindow::onAutoAcceptFriendRequest);
     connect(&NetworkManager::instance(), &NetworkManager::newMessageReceived, this, &MainWindow::onNewMessageReceived);

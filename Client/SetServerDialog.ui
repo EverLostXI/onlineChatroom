@@ -26,14 +26,14 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Server Address</string>
+       <string>服务器IP</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Server port</string>
+       <string>服务器端口</string>
       </property>
      </widget>
     </item>
@@ -78,14 +78,14 @@
     <item>
      <widget class="QPushButton" name="confirmButton">
       <property name="text">
-       <string>Confirm</string>
+       <string>确认</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="cancelButton">
       <property name="text">
-       <string>Cancel</string>
+       <string>取消</string>
       </property>
      </widget>
     </item>

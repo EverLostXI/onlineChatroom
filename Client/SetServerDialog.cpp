@@ -5,21 +5,20 @@
 
 #include "QDebug"
 #include <QMessageBox>
-
+#include <QSettings>
 #include <QRegularExpression>
-#include <QRegularExpressionValidator>  // 添加这行
-#include <QIntValidator>                 // 添加这行
+#include <QRegularExpressionValidator>
+#include <QIntValidator>
 
 SetServerDialog::SetServerDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::SetServerDialog)
 {
     ui->setupUi(this);
-    setWindowTitle("Server setting");
+    setWindowTitle("服务器设置");
 
-    // 设置默认值
-    ui->serverAddress->setText("10.30.110.243");
-    ui->serverPort->setText("8888");
+    // 从设置文件中加载保存的值
+    loadSettings();
 
     // 添加输入验证
     setupValidation();
@@ -42,37 +41,33 @@ void SetServerDialog::setupValidation()
 
 void SetServerDialog::on_confirmButton_clicked()
 {
-    QString serverAddress = ui->serverAddress->text().trimmed();
-    QString serverPortStr = ui->serverPort->text().trimmed();
+    serverAddress = ui->serverAddress->text().trimmed();
+    serverPortStr = ui->serverPort->text().trimmed();
 
     // 检查输入是否为空
     if (serverAddress.isEmpty() || serverPortStr.isEmpty()) {
-        QMessageBox::warning(this, "Setting failed!", "Server address and server port cannot be empty!");
+        QMessageBox::warning(this, "设置失败!", "服务器IP或端口不能为空!");
         return;
     }
 
     // 验证IP地址格式
     if (!isValidIPAddress(serverAddress)) {
-        QMessageBox::warning(this, "Invalid IP", "Please enter a valid IP address!");
+        QMessageBox::warning(this, "输入无效！", "请输入有效的IP地址!");
         ui->serverAddress->setFocus();
         return;
     }
 
-    // 验证端口号 - 修复了您的bug：ok变量没有正确使用
+    // 验证端口号
     bool ok = false;
     quint16 serverPort = serverPortStr.toUShort(&ok);
     if (!ok) {
-        QMessageBox::warning(this, "Invalid input!", "Port must be a number between 1-65535!");
+        QMessageBox::warning(this, "输入无效!", "端口号应为1-65535的整数!");
         ui->serverPort->setFocus();
         return;
     }
 
-    // 保存设置（可选）
-    //m_serverAddress = serverAddress;
-    //m_serverPort = serverPort;
-
-    // 发射信号
-    //emit serverEndPoint(serverAddress, serverPort);
+    // 保存设置到文件
+    saveSettings();
 
     // 获取NetworkManager的单例
     NetworkManager& netManager = NetworkManager::instance();
@@ -94,17 +89,43 @@ bool SetServerDialog::isValidIPAddress(const QString& ip)
 
 void SetServerDialog::on_cancelButton_clicked()
 {
+    loadSettings();
     reject();
 }
 
-/*
-QString SetServerDialog::getServerAddress() const
+// 新添加的函数：保存设置到配置文件
+void SetServerDialog::saveSettings()
 {
-    return m_serverAddress;
+    QSettings settings("CSC3002", "Chatroom"); // 可以改为您的公司和应用名称
+    settings.setValue("Server/Address", serverAddress);
+    settings.setValue("Server/Port", serverPortStr);
 }
 
-quint16 SetServerDialog::getServerPort() const
+// 新添加的函数：从配置文件加载设置
+void SetServerDialog::loadSettings()
 {
-    return m_serverPort;
+    QSettings settings("CSC3002", "Chatroom");
+
+    // 从设置文件读取，如果没有则使用默认值
+    QString savedAddress = settings.value("Server/Address", "10.30.110.243").toString();
+    QString savedPort = settings.value("Server/Port", "8888").toString();
+
+    // 更新成员变量
+    serverAddress = savedAddress;
+    serverPortStr = savedPort;
+
+    // 更新UI显示
+    ui->serverAddress->setText(serverAddress);
+    ui->serverPort->setText(serverPortStr);
 }
-*/
+
+// 可选：添加获取当前设置的方法（如果需要外部访问）
+QString SetServerDialog::getCurrentAddress() const
+{
+    return serverAddress;
+}
+
+QString SetServerDialog::getCurrentPort() const
+{
+    return serverPortStr;
+}

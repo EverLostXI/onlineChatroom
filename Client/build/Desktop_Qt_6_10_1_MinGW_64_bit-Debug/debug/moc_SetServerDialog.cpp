@@ -39,23 +39,16 @@ template <> constexpr inline auto SetServerDialog::qt_create_metaobjectdata<qt_m
     namespace QMC = QtMocConstants;
     QtMocHelpers::StringRefStorage qt_stringData {
         "SetServerDialog",
-        "serverEndPoint",
-        "",
-        "address",
-        "port",
         "on_confirmButton_clicked",
+        "",
         "on_cancelButton_clicked"
     };
 
     QtMocHelpers::UintData qt_methods {
-        // Signal 'serverEndPoint'
-        QtMocHelpers::SignalData<void(const QString &, quint16)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 3 }, { QMetaType::UShort, 4 },
-        }}),
         // Slot 'on_confirmButton_clicked'
-        QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_cancelButton_clicked'
-        QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -79,16 +72,12 @@ void SetServerDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
     auto *_t = static_cast<SetServerDialog *>(_o);
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: _t->serverEndPoint((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<quint16>>(_a[2]))); break;
-        case 1: _t->on_confirmButton_clicked(); break;
-        case 2: _t->on_cancelButton_clicked(); break;
+        case 0: _t->on_confirmButton_clicked(); break;
+        case 1: _t->on_cancelButton_clicked(); break;
         default: ;
         }
     }
-    if (_c == QMetaObject::IndexOfMethod) {
-        if (QtMocHelpers::indexOfMethod<void (SetServerDialog::*)(const QString & , quint16 )>(_a, &SetServerDialog::serverEndPoint, 0))
-            return;
-    }
+    (void)_a;
 }
 
 const QMetaObject *SetServerDialog::metaObject() const
@@ -110,21 +99,15 @@ int SetServerDialog::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 2)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 2;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 2)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 3;
+        _id -= 2;
     }
     return _id;
-}
-
-// SIGNAL 0
-void SetServerDialog::serverEndPoint(const QString & _t1, quint16 _t2)
-{
-    QMetaObject::activate<void>(this, &staticMetaObject, 0, nullptr, _t1, _t2);
 }
 QT_WARNING_POP

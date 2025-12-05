@@ -117,7 +117,7 @@ public:
         usernameLineEdit->setText(QString());
         registerButton->setText(QCoreApplication::translate("LoginDialog", "\346\263\250\345\206\214", nullptr));
         loginButton->setText(QCoreApplication::translate("LoginDialog", "\347\231\273\345\275\225", nullptr));
-        setServerButton->setText(QCoreApplication::translate("LoginDialog", "Server setting", nullptr));
+        setServerButton->setText(QCoreApplication::translate("LoginDialog", "\346\234\215\345\212\241\345\231\250\350\256\276\347\275\256", nullptr));
     } // retranslateUi
 
 };

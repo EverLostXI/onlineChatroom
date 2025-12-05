@@ -97,12 +97,12 @@ public:
     void retranslateUi(QWidget *SetServerDialog)
     {
         SetServerDialog->setWindowTitle(QCoreApplication::translate("SetServerDialog", "Form", nullptr));
-        label->setText(QCoreApplication::translate("SetServerDialog", "Server Address", nullptr));
-        label_2->setText(QCoreApplication::translate("SetServerDialog", "Server port", nullptr));
+        label->setText(QCoreApplication::translate("SetServerDialog", "\346\234\215\345\212\241\345\231\250IP", nullptr));
+        label_2->setText(QCoreApplication::translate("SetServerDialog", "\346\234\215\345\212\241\345\231\250\347\253\257\345\217\243", nullptr));
         serverAddress->setText(QCoreApplication::translate("SetServerDialog", "10.30.110.243", nullptr));
         serverPort->setText(QCoreApplication::translate("SetServerDialog", "8888", nullptr));
-        confirmButton->setText(QCoreApplication::translate("SetServerDialog", "Confirm", nullptr));
-        cancelButton->setText(QCoreApplication::translate("SetServerDialog", "Cancel", nullptr));
+        confirmButton->setText(QCoreApplication::translate("SetServerDialog", "\347\241\256\350\256\244", nullptr));
+        cancelButton->setText(QCoreApplication::translate("SetServerDialog", "\345\217\226\346\266\210", nullptr));
     } // retranslateUi
 
 };

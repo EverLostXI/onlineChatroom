@@ -27,6 +27,13 @@ void RegisterDialog::on_registerButton_clicked()
         return;
     }
 
+    bool isNumeric;
+    uint8_t userId = username.toUShort(&isNumeric); // toUShort可以安全地转为uint8_t
+    if (!isNumeric) {
+        QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
+        return;
+    }
+
     // 2. 检查两次输入的密码是否一致
     if (password != confirm) {
         QMessageBox::warning(this, "注册失败", "两次输入的密码不一致！");
@@ -49,3 +56,4 @@ void RegisterDialog::on_backButton_clicked()
     // 点击返回，关闭对话框并返回 Rejected 状态
     reject();
 }
+
