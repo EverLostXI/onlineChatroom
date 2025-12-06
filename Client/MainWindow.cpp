@@ -303,16 +303,24 @@ void MainWindow::onNewMessageReceived(const ChatMessage &message, const QString&
 {
     qDebug() << "[MainWindow] 收到新消息，对话ID:" << conversationId;
 
-    // 不管是群聊还是私聊，直接用 conversationId 作为 key 存入聊天记录
-    m_chatHistories[conversationId].append(message);
+    // 临时：为群聊消息添加前缀，避免与私聊ID冲突
+    QString actualConversationId = conversationId;
+
+    // 检查是否是群聊（通过m_groups）
+    if (m_groups.contains(conversationId)) {
+        actualConversationId = "group_" + conversationId;
+    }
+
+    // 使用actualConversationId存储和显示
+    m_chatHistories[actualConversationId].append(message);
 
     // 如果当前正在看这个对话，就刷新界面
-    if (conversationId == m_currentConversationId) {
+    if (actualConversationId == m_currentConversationId) {
         updateChatHistoryView();
     } else {
         // 否则，可以在左侧列表项上显示未读标记
-        int currentUnread = m_unreadCounts.value(conversationId, 0);
-        m_unreadCounts[conversationId] = currentUnread + 1;
+        int currentUnread = m_unreadCounts.value(actualConversationId, 0);
+        m_unreadCounts[actualConversationId] = currentUnread + 1;
         // 更新对应的列表项显示
         updateConversationItem(conversationId);
         QApplication::beep();

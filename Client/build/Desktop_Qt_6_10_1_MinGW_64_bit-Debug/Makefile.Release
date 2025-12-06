@@ -2428,6 +2428,8 @@ release/LoginDialog.o: ../../LoginDialog.cpp ../../LoginDialog.h \
 		D:/Qt/6.10.1/mingw_64/include/QtWidgets/QMessageBox \
 		D:/Qt/6.10.1/mingw_64/include/QtWidgets/qmessagebox.h \
 		D:/Qt/6.10.1/mingw_64/include/QtWidgets/qdialogbuttonbox.h \
+		D:/Qt/6.10.1/mingw_64/include/QtCore/QSettings \
+		D:/Qt/6.10.1/mingw_64/include/QtCore/qsettings.h \
 		../../RegisterDialog.h \
 		../../SetServerDialog.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\LoginDialog.o ..\..\LoginDialog.cpp

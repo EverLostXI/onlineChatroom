@@ -22,6 +22,7 @@ SOURCES += \
     MainWindow.cpp \
     NetworkManager.cpp \
     RegisterDialog.cpp \
+    SetNickname.cpp \
     SetServerDialog.cpp \
     main.cpp
 
@@ -32,6 +33,7 @@ HEADERS += \
     MainWindow.h \
     NetworkManager.h \
     RegisterDialog.h \
+    SetNickname.h \
     SetServerDialog.h \
     chatMsg.hpp
 
@@ -41,6 +43,7 @@ FORMS += \
     LoginDialog.ui \
     MainWindow.ui \
     RegisterDialog.ui \
+    SetNickname.ui \
     SetServerDialog.ui
 
 # Default rules for deployment.
