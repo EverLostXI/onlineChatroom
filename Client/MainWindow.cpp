@@ -363,7 +363,7 @@ QString MainWindow::formatConversationDisplay(const QString& conversationId,
     int unreadCount = m_unreadCounts.value(conversationId, 0);
 
     if (unreadCount > 0) {
-        return QString("(%3) %1%2").arg(prefix).arg(name).arg(unreadCount);
+        return QString("(%1) %2%3").arg(unreadCount).arg(prefix).arg(name);
     }
     return prefix + name;
 }
@@ -377,12 +377,6 @@ void MainWindow::setItemUnreadStyle(QListWidgetItem* item, int unreadCount)
 
     // 设置文本颜色为红色
     item->setForeground(Qt::red);
-
-    // 添加提示符号
-    QString text = item->text();
-    if (!text.contains("●")) {
-        item->setText("● " + text);
-    }
 }
 
 // [新增] 实现槽函数
