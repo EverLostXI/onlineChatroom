@@ -49,9 +49,41 @@ cmake_ninja_workdir = D$:/Projects/Chatroom/Server/build/
 
 build cmake_object_order_depends_target_server: phony || .
 
-build CMakeFiles/server.dir/server.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/server.cpp || cmake_object_order_depends_target_server
+build CMakeFiles/server.dir/main.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/main.cpp || cmake_object_order_depends_target_server
   CONFIG = Debug
-  DEP_FILE = CMakeFiles\server.dir\server.cpp.obj.d
+  DEP_FILE = CMakeFiles\server.dir\main.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/logger.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/logger.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\logger.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/socket.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/socket.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\socket.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/userControl.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/userControl.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\userControl.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/handleClient.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/handleClient.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\handleClient.cpp.obj.d
   FLAGS = -g -std=gnu++17
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
@@ -65,7 +97,7 @@ build CMakeFiles/server.dir/server.cpp.obj: CXX_COMPILER__server_unscanned_Debug
 #############################################
 # Link the executable server.exe
 
-build server.exe: CXX_EXECUTABLE_LINKER__server_Debug CMakeFiles/server.dir/server.cpp.obj
+build server.exe: CXX_EXECUTABLE_LINKER__server_Debug CMakeFiles/server.dir/main.cpp.obj CMakeFiles/server.dir/logger.cpp.obj CMakeFiles/server.dir/socket.cpp.obj CMakeFiles/server.dir/userControl.cpp.obj CMakeFiles/server.dir/handleClient.cpp.obj
   CONFIG = Debug
   FLAGS = -g
   LINK_LIBRARIES = -lws2_32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32

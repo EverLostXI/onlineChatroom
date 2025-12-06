@@ -1,5 +1,14 @@
 # ninja log v7
-12	4966	7863881912668942	CMakeFiles/server.dir/server.cpp.obj	93bf1ce319282c23
-4968	6916	7863881962232457	server.exe	97e4280517076062
-14	3760	7864790799903578	CMakeFiles/server.dir/server.cpp.obj	93bf1ce319282c23
-3762	6204	7864790837381939	server.exe	97e4280517076062
+7	2776	7864821988017159	CMakeFiles/server.dir/server.cpp.obj	93bf1ce319282c23
+2128	3299	7867451292856385	server.exe	b3ce8a41118c4094
+7	706	7867451057577290	CMakeFiles/server.dir/logger.cpp.obj	e6b4c70a2a4768a2
+12	2512	7867450060265920	CMakeFiles/server.dir/socket.cpp.obj	62b011f99bc62f65
+7	2126	7867451271657011	CMakeFiles/server.dir/main.cpp.obj	5b65d7b7a445beb8
+16	2650	7867451057656180	CMakeFiles/server.dir/handleClient.cpp.obj	223daef75757b63c
+12	2594	7867451057621061	CMakeFiles/server.dir/userControl.cpp.obj	16748e102a026d71
+15	1842	7867502366350326	CMakeFiles/server.dir/logger.cpp.obj	e6b4c70a2a4768a2
+20	3067	7867502366410515	CMakeFiles/server.dir/socket.cpp.obj	62b011f99bc62f65
+9	3190	7867502366285191	CMakeFiles/server.dir/main.cpp.obj	5b65d7b7a445beb8
+25	3650	7867502366455611	CMakeFiles/server.dir/userControl.cpp.obj	16748e102a026d71
+30	3659	7867502366500348	CMakeFiles/server.dir/handleClient.cpp.obj	223daef75757b63c
+3659	5462	7867502402788546	server.exe	b3ce8a41118c4094
