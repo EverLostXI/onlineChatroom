@@ -287,6 +287,7 @@ void MainWindow::onAutoAcceptFriendRequest(uint8_t requesterId)
         QString temporaryName = QString("用户 %1").arg(requesterId);
         m_friends.insert(requesterId, temporaryName);
 
+        QMessageBox::information(this, "已自动接受好友添加请求", QString("已添加好友%1").arg(requesterId));
         // 3. 调用你已有的函数刷新UI
         updateConversationList();
     }
@@ -351,7 +352,7 @@ void MainWindow::updateConversationItem(const QString& conversationId)
         QFont font = item->font();
         font.setBold(false);
         item->setFont(font);
-        item->setForeground(Qt::black); // 恢复默认颜色
+        item->setForeground(Qt::white); // 恢复默认颜色
     }
 }
 
@@ -421,6 +422,6 @@ void MainWindow::onAddedToNewGroup(const QString& groupName, uint8_t creatorId, 
         m_groups[groupName] = newGroup;
 
         updateConversationList();
-        QMessageBox::information(this, "收到好友添加请求", QString("已添加好友 %1！").arg(creatorId));
+        QMessageBox::information(this, "已被拉入群聊", QString("已被好友%1拉入群聊%2").arg(creatorId).arg(groupName));
     }
 }

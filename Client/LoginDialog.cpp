@@ -2,6 +2,7 @@
 #include "ui_LoginDialog.h"
 #include "NetworkManager.h" // 引入我们的网络核心
 #include <QMessageBox>
+#include <QSettings>
 #include "RegisterDialog.h"
 #include "ui_registerdialog.h"
 #include "SetServerDialog.h"
@@ -31,9 +32,13 @@ LoginDialog::LoginDialog(QWidget *parent)
     // 2. (可选但推荐) 启动程序时就尝试连接服务器
     //    这样用户在输入账号密码时，连接可能已经建立好了，体验更流畅
 
-    QString host = "10.30.110.243";
-    quint16 port = 8888;
-    netManager.connectToServer(host, port);
+    QSettings settings("CSC3002", "Chatroom");
+
+    // 从设置文件读取，如果没有则使用默认值
+    QString savedAddress = settings.value("Server/Address", "10.30.110.243").toString();
+    qint16 savedPort = settings.value("Server/Port", "8888").toUInt();
+
+    netManager.connectToServer(savedAddress, savedPort);
 
 }
 
