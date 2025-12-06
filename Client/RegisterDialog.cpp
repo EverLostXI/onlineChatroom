@@ -46,6 +46,7 @@ void RegisterDialog::on_registerButton_clicked()
     // TODOTODOTODO: 实现真正的账号存储逻辑
     // 3. 发射信号，把注册任务交给 NetworkManager
     emit registrationRequested(username, password);
+    QMessageBox::information(this, "成功", "注册成功！");
 
     // 注册成功后，关闭对话框并返回 Accepted 状态
     //accept();

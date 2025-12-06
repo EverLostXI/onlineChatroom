@@ -5,6 +5,9 @@
 #include "CreateGroupDialog.h" // 确保包含了CreateGroupDialog
 #include "AddFriendDialog.h"
 #include <QListWidgetItem> // 如果槽函数参数用到了，需要包含头文件
+#include <QMessageBox>
+#include <QFont>
+#include <QApplication>
 #include "networkmanager.h"
 
 // ... 其他代码 ...
@@ -132,8 +135,16 @@ void MainWindow::on_sendButton_clicked()
 // [修改] on_conversationListWidget_itemClicked
 void MainWindow::on_conversationListWidget_itemClicked(QListWidgetItem *item)
 {
-    // 从 item 中恢复 conversationId
-    m_currentConversationId = item->data(Qt::UserRole).toString();
+    QString conversationId = item->data(Qt::UserRole).toString();
+
+    // 清除该对话的未读计数
+    if (m_unreadCounts.contains(conversationId) && m_unreadCounts[conversationId] > 0) {
+        m_unreadCounts.remove(conversationId);
+        updateConversationItem(conversationId);
+    }
+
+    // 切换到对话
+    m_currentConversationId = conversationId;
     qDebug() << "切换到对话:" << m_currentConversationId;
     updateChatHistoryView();
 }
@@ -142,6 +153,8 @@ void MainWindow::on_conversationListWidget_itemClicked(QListWidgetItem *item)
 void MainWindow::updateChatHistoryView()
 {
     ui->chatHistoryListWidget->clear();
+    ui->chatHistoryListWidget->setSpacing(5);
+
     if (m_currentConversationId == "-1" || !m_chatHistories.contains(m_currentConversationId)) {
         return;
     }
@@ -155,7 +168,7 @@ void MainWindow::updateChatHistoryView()
         QString senderName;
 
         if (msg.senderId == myUserId) {
-            senderName = "我";
+            senderName = QString("我(%1)").arg(myUserId);
             item->setTextAlignment(Qt::AlignRight);
         } else {
             // 尝试从好友列表获取名字，如果没有就用ID
@@ -223,19 +236,40 @@ void MainWindow::on_createGroupButton_clicked()
 void MainWindow::updateConversationList()
 {
     ui->conversationListWidget->clear();
+    m_conversationItems.clear(); // 清空指针映射
 
     // 添加好友
     for(auto it = m_friends.constBegin(); it != m_friends.constEnd(); ++it) {
-        QString itemText = QString("好友: %1").arg(it.value());
-        QListWidgetItem* item = new QListWidgetItem(itemText, ui->conversationListWidget);
-        item->setData(Qt::UserRole, QString::number(it.key())); // 将好友ID字符串存入
+        QString conversationId = QString::number(it.key());
+        QString displayText = formatConversationDisplay(conversationId, it.value(), false);
+
+        QListWidgetItem* item = new QListWidgetItem(displayText, ui->conversationListWidget);
+        item->setData(Qt::UserRole, conversationId);
+
+        // 设置未读样式
+        int unreadCount = m_unreadCounts.value(conversationId, 0);
+        if (unreadCount > 0) {
+            setItemUnreadStyle(item, unreadCount);
+        }
+
+        m_conversationItems[conversationId] = item;
     }
 
     // 添加群聊
     for(auto it = m_groups.constBegin(); it != m_groups.constEnd(); ++it) {
-        QString itemText = QString("群聊: %1").arg(it.key());
-        QListWidgetItem* item = new QListWidgetItem(itemText, ui->conversationListWidget);
-        item->setData(Qt::UserRole, it.key()); // 将群ID字符串存入
+        QString conversationId = it.key();
+        QString displayText = formatConversationDisplay(conversationId, it.key(), true);
+
+        QListWidgetItem* item = new QListWidgetItem(displayText, ui->conversationListWidget);
+        item->setData(Qt::UserRole, conversationId);
+
+        // 设置未读样式
+        int unreadCount = m_unreadCounts.value(conversationId, 0);
+        if (unreadCount > 0) {
+            setItemUnreadStyle(item, unreadCount);
+        }
+
+        m_conversationItems[conversationId] = item;
     }
 }
 
@@ -275,11 +309,81 @@ void MainWindow::onNewMessageReceived(const ChatMessage &message, const QString&
     if (conversationId == m_currentConversationId) {
         updateChatHistoryView();
     } else {
-        // 否则，可以在左侧列表项上显示未读标记（此功能暂未实现）
+        // 否则，可以在左侧列表项上显示未读标记
+        int currentUnread = m_unreadCounts.value(conversationId, 0);
+        m_unreadCounts[conversationId] = currentUnread + 1;
+        // 更新对应的列表项显示
+        updateConversationItem(conversationId);
+        QApplication::beep();
         qDebug() << "收到非当前窗口消息，来自:" << conversationId;
     }
 }
 
+void MainWindow::updateConversationItem(const QString& conversationId)
+{
+    if (!m_conversationItems.contains(conversationId)) {
+        return;
+    }
+
+    QListWidgetItem* item = m_conversationItems[conversationId];
+    int unreadCount = m_unreadCounts.value(conversationId, 0);
+
+    // 根据对话类型格式化文本
+    QString displayText;
+    bool isGroup = m_groups.contains(conversationId);
+
+    if (isGroup) {
+        QString groupName = conversationId;
+        displayText = formatConversationDisplay(conversationId, groupName, true);
+    } else {
+        int friendId = conversationId.toInt();
+        QString friendName = m_friends.value(friendId, QString("用户 %1").arg(friendId));
+        displayText = formatConversationDisplay(conversationId, friendName, false);
+    }
+
+    item->setText(displayText);
+
+    // 设置样式
+    if (unreadCount > 0) {
+        setItemUnreadStyle(item, unreadCount);
+    } else {
+        // 清除未读样式
+        QFont font = item->font();
+        font.setBold(false);
+        item->setFont(font);
+        item->setForeground(Qt::black); // 恢复默认颜色
+    }
+}
+
+QString MainWindow::formatConversationDisplay(const QString& conversationId,
+                                              const QString& name,
+                                              bool isGroup)
+{
+    QString prefix = isGroup ? "群聊: " : "好友: ";
+    int unreadCount = m_unreadCounts.value(conversationId, 0);
+
+    if (unreadCount > 0) {
+        return QString("(%3) %1%2").arg(prefix).arg(name).arg(unreadCount);
+    }
+    return prefix + name;
+}
+// 辅助函数：设置未读样式
+void MainWindow::setItemUnreadStyle(QListWidgetItem* item, int unreadCount)
+{
+    // 设置粗体
+    QFont font = item->font();
+    font.setBold(true);
+    item->setFont(font);
+
+    // 设置文本颜色为红色
+    item->setForeground(Qt::red);
+
+    // 添加提示符号
+    QString text = item->text();
+    if (!text.contains("●")) {
+        item->setText("● " + text);
+    }
+}
 
 // [新增] 实现槽函数
 // [修改] onCreateGroupResult (创建者的处理逻辑)
@@ -323,5 +427,6 @@ void MainWindow::onAddedToNewGroup(const QString& groupName, uint8_t creatorId, 
         m_groups[groupName] = newGroup;
 
         updateConversationList();
+        QMessageBox::information(this, "收到好友添加请求", QString("已添加好友 %1！").arg(creatorId));
     }
 }

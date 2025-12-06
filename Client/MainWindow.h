@@ -61,6 +61,10 @@ private:
     // [修改] 聊天记录，Key从 int 改为 QString
     QMap<QString, QList<ChatMessage>> m_chatHistories;
 
+    // 新增数据结构 - 需要声明
+    QHash<QString, int> m_unreadCounts;  // 未读消息计数
+    QHash<QString, QListWidgetItem*> m_conversationItems; // 对话项指针映射
+
     // [修改] 当前会话ID，从 int 改为 QString
     QString m_currentConversationId = "-1";
 
@@ -69,5 +73,11 @@ private:
     // [新增] 用于暂存正在创建的群聊的成员列表
     QVector<uint8_t> m_pendingGroupMembers;
     void updateChatHistoryView(); // 专门负责刷新右侧聊天记录的函数
+
+    void updateConversationItem(const QString& conversationId);
+    QString formatConversationDisplay(const QString& conversationId,
+                                      const QString& name,
+                                      bool isGroup);
+    void setItemUnreadStyle(QListWidgetItem* item, int unreadCount);
 };
 #endif // MAINWINDOW_H
