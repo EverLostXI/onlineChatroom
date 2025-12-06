@@ -47,6 +47,9 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "item",
         "on_addFriendButton_clicked",
         "on_createGroupButton_clicked",
+        "on_setNicknameButton_clicked",
+        "onNicknameChanged",
+        "newNickname",
         "onAutoAcceptFriendRequest",
         "uint8_t",
         "requesterId",
@@ -74,21 +77,27 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_createGroupButton_clicked'
         QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_setNicknameButton_clicked'
+        QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onNicknameChanged'
+        QtMocHelpers::SlotData<void(const QString &)>(9, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 10 },
+        }}),
         // Slot 'onAutoAcceptFriendRequest'
-        QtMocHelpers::SlotData<void(uint8_t)>(8, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 9, 10 },
+        QtMocHelpers::SlotData<void(uint8_t)>(11, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 12, 13 },
         }}),
         // Slot 'onNewMessageReceived'
-        QtMocHelpers::SlotData<void(const ChatMessage &, const QString &)>(11, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 12, 13 }, { QMetaType::QString, 14 },
+        QtMocHelpers::SlotData<void(const ChatMessage &, const QString &)>(14, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 15, 16 }, { QMetaType::QString, 17 },
         }}),
         // Slot 'onCreateGroupResult'
-        QtMocHelpers::SlotData<void(bool, const QString &)>(15, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Bool, 16 }, { QMetaType::QString, 13 },
+        QtMocHelpers::SlotData<void(bool, const QString &)>(18, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Bool, 19 }, { QMetaType::QString, 16 },
         }}),
         // Slot 'onAddedToNewGroup'
-        QtMocHelpers::SlotData<void(const QString &, uint8_t, const QVector<uint8_t> &)>(17, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::QString, 18 }, { 0x80000000 | 9, 19 }, { 0x80000000 | 20, 21 },
+        QtMocHelpers::SlotData<void(const QString &, uint8_t, const QVector<uint8_t> &)>(20, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 21 }, { 0x80000000 | 12, 22 }, { 0x80000000 | 23, 24 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -117,10 +126,12 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 1: _t->on_conversationListWidget_itemClicked((*reinterpret_cast<std::add_pointer_t<QListWidgetItem*>>(_a[1]))); break;
         case 2: _t->on_addFriendButton_clicked(); break;
         case 3: _t->on_createGroupButton_clicked(); break;
-        case 4: _t->onAutoAcceptFriendRequest((*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[1]))); break;
-        case 5: _t->onNewMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 6: _t->onCreateGroupResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 7: _t->onAddedToNewGroup((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<uint8_t>>>(_a[3]))); break;
+        case 4: _t->on_setNicknameButton_clicked(); break;
+        case 5: _t->onNicknameChanged((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
+        case 6: _t->onAutoAcceptFriendRequest((*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[1]))); break;
+        case 7: _t->onNewMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 8: _t->onCreateGroupResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 9: _t->onAddedToNewGroup((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<uint8_t>>>(_a[3]))); break;
         default: ;
         }
     }
@@ -145,14 +156,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 8)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 8;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 8)
+        if (_id < 10)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 8;
+        _id -= 10;
     }
     return _id;
 }

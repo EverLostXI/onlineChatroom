@@ -132,13 +132,16 @@
     <rect>
      <x>119</x>
      <y>59</y>
-     <width>71</width>
+     <width>82</width>
      <height>31</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
      <widget class="QPushButton" name="setNicknameButton">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="font">
        <font>
         <pointsize>8</pointsize>

@@ -24,7 +24,11 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLineEdit" name="lineEdit"/>
+     <widget class="QLineEdit" name="nickname">
+      <property name="text">
+       <string>用户0</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -39,14 +43,14 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="confirmButton">
       <property name="text">
        <string>确认</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="cancelButton">
       <property name="text">
        <string>取消</string>
       </property>
@@ -57,9 +61,9 @@
   <widget class="QWidget" name="verticalLayoutWidget_2">
    <property name="geometry">
     <rect>
-     <x>49</x>
+     <x>69</x>
      <y>49</y>
-     <width>111</width>
+     <width>91</width>
      <height>131</height>
     </rect>
    </property>

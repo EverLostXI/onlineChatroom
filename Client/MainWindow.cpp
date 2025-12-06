@@ -8,7 +8,9 @@
 #include <QMessageBox>
 #include <QFont>
 #include <QApplication>
+#include <QSettings>
 #include "networkmanager.h"
+#include "SetNickname.h"
 
 // ... 其他代码 ...
 
@@ -19,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("开始聊天");
+
+    // 初始化欢迎信息
+    updateWelcomeMessage();
+
     // ...
     connect(&NetworkManager::instance(), &NetworkManager::autoAcceptFriendRequest, this, &MainWindow::onAutoAcceptFriendRequest);
     connect(&NetworkManager::instance(), &NetworkManager::newMessageReceived, this, &MainWindow::onNewMessageReceived);
@@ -101,6 +107,54 @@ MainWindow::~MainWindow()
 }
 
 // ！！！为所有槽函数添加实现 ！！！
+
+void MainWindow::on_setNicknameButton_clicked(){
+    qDebug() <<"click set nickname";
+    // 使用指针创建对话框，以便连接信号
+    SetNickname *setNickname = new SetNickname(this);
+    setNickname->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 连接昵称更改信号
+    connect(setNickname, &SetNickname::nicknameChanged,
+            this, &MainWindow::onNicknameChanged);
+
+    // 连接对话框关闭信号
+    connect(setNickname, &SetNickname::finished,
+            this, [this, setNickname]() {
+                // 对话框关闭后更新欢迎信息
+                updateWelcomeMessage();
+            });
+
+    setNickname->show();
+}
+
+// 更新欢迎信息函数
+void MainWindow::updateWelcomeMessage()
+{
+    // 从设置文件读取昵称
+    QSettings settings("CSC3002", "Chatroom");
+    QString nickname = settings.value("Client/Nickname", "用户0").toString();
+
+    // 假设您有一个 welcomeLabel 标签
+    if (ui->welcomeLabel) {
+        ui->welcomeLabel->setText(QString("欢迎！%1").arg(nickname));
+    }
+
+    qDebug() << "更新欢迎信息，昵称:" << nickname;
+}
+
+void MainWindow::onNicknameChanged(const QString& newNickname)
+{
+    qDebug() << "昵称已更改为:" << newNickname;
+
+    // 立即更新欢迎信息
+    if (ui->welcomeLabel) {
+        ui->welcomeLabel->setText(QString("欢迎！%1").arg(newNickname));
+    }
+
+    // 这里还可以添加其他逻辑，比如更新聊天中显示的"我"的名字
+    // 或者通知服务器昵称更改等
+}
 
 // 这个函数在用户点击“发送”按钮时被自动调用
 // [修改] on_sendButton_clicked

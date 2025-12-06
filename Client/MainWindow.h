@@ -42,6 +42,8 @@ private slots:
     // 新增的槽函数声明
     void on_addFriendButton_clicked();
     void on_createGroupButton_clicked();
+    void on_setNicknameButton_clicked();
+    void onNicknameChanged(const QString& newNickname);
 
     void onAutoAcceptFriendRequest(uint8_t requesterId); // [新增]
     void onNewMessageReceived(const ChatMessage &message, const QString& conversationId);
@@ -79,5 +81,7 @@ private:
                                       const QString& name,
                                       bool isGroup);
     void setItemUnreadStyle(QListWidgetItem* item, int unreadCount);
+
+    void updateWelcomeMessage();
 };
 #endif // MAINWINDOW_H
