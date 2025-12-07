@@ -221,12 +221,18 @@ void MainWindow::updateChatHistoryView()
         QListWidgetItem* item = new QListWidgetItem();
         QString senderName;
 
+        QSettings settings("CSC3002", "Chatroom");
+        QString myNickname = settings.value("Client/Nickname", "用户0").toString();
+
         if (msg.senderId == myUserId) {
-            senderName = QString("我(%1)").arg(myUserId);
+            senderName = QString("%1(%2)").arg(myNickname).arg(myUserId);
             item->setTextAlignment(Qt::AlignRight);
         } else {
-            // 尝试从好友列表获取名字，如果没有就用ID
-            senderName = m_friends.value(msg.senderId, QString("用户 %1").arg(msg.senderId));
+            // 好友的消息：显示为"好友昵称(好友ID)"格式
+            // 获取好友的昵称
+            QString friendNickname = m_friends.value(msg.senderId, QString("用户%1").arg(msg.senderId));
+            // 格式化为"昵称(ID)"的格式
+            senderName = QString("%1(%2)").arg(friendNickname).arg(msg.senderId);
             item->setTextAlignment(Qt::AlignLeft);
         }
 
