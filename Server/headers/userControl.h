@@ -43,3 +43,4 @@ bool CreateGroup(std::string& groupName, std::vector<uint8_t>& memberList); // �
 // 离线消息函数
 void SaveOfflineMessages(uint8_t userID, Packet message);  // 保存离线消息
 void SendOfflineMessages(uint8_t userID, ClientSession* session); // 发送离线消息
+void SetUserName(uint8_t userID, std::string& userName);

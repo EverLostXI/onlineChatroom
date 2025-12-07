@@ -8,6 +8,7 @@ std::map<uint8_t, std::string> g_userCredentials;
 std::map<uint8_t, ClientSession*> g_userSessions;
 std::map<uint8_t, std::vector<Packet>> g_offlineMessages;
 std::map<std::string, std::vector<uint8_t>> g_groupChat;
+std::map<uint8_t, std::string> g_userName;
 
 // ClientSession 类成员函数实现
 ClientSession::ClientSession(SOCKET fd, const std::string& ip, unsigned short port)
@@ -17,7 +18,7 @@ ClientSession::ClientSession(SOCKET fd, const std::string& ip, unsigned short po
       userid(0)
 {
     std::string logmessage = "客户端连接: IP = " + client_ip + ", 端口 = " + std::to_string(client_port);
-    WriteLog(LogLevel::INFO_LEVEL, logmessage);
+    WriteLog(LogLevel::CONNECTION, logmessage);
 }
 
 void ClientSession::setID(uint8_t id) {
@@ -46,6 +47,10 @@ bool CheckExist(uint8_t userID) {
 }
 // 检查用户是否在线
 bool CheckOnline(uint8_t userID) {
+    // 先检查是否存在，避免 map 自动创建条目
+    if (!g_userSessions.count(userID)) {
+        return false;
+    }
     if (g_userSessions[userID] == nullptr) {
         return false;
     }
@@ -64,12 +69,12 @@ int CheckUser(uint8_t userID) {
 // 注册函数: 1. 添加账户密码键值对 2. 给id绑定一个空的会话指针
 bool Signup(uint8_t userID, const std::string &password) {
     if (CheckExist(userID)) { // 检查用户是否已经存在（id唯一）
-                    WriteLog(LogLevel::INFO_LEVEL, "账号创建失败 - 用户ID已存在: " + std::to_string(userID));
+                    WriteLog(LogLevel::PROCESS, "账号创建失败 - ID已存在: " + std::to_string(userID));
                     return false;
                 } else {
                     g_userCredentials[userID] = password;
                     g_userSessions[userID] = nullptr;
-                    WriteLog(LogLevel::INFO_LEVEL, "账号创建成功 - 用户ID: " + std::to_string(userID));
+                    WriteLog(LogLevel::PROCESS, "账号创建成功: " + std::to_string(userID));
                     return true;
                 }
 }
@@ -98,7 +103,7 @@ void LogOff(uint8_t userID) {
 bool CreateGroup(std::string &groupName, std::vector<uint8_t> &memberList) {
     // 先检查群聊存不存在
     if (g_groupChat.count(groupName)) {
-        WriteLog(LogLevel::WARN_LEVEL, "群聊已经存在");
+        WriteLog(LogLevel::PROCESS, "群聊已经存在");
         return false;
     }
     g_groupChat[groupName] = memberList;
@@ -122,8 +127,8 @@ void SendOfflineMessages(uint8_t userID, ClientSession* session) {
     std::vector<Packet>& messages = g_offlineMessages[userID];
     int count = messages.size();
 
-    DebugWriteLog(LogLevel::TRACE_LEVEL, 
-             "开始推送离线消息 - 用户ID: " + std::to_string(userID) + 
+    DebugWriteLog(LogLevel::PASS, 
+             "推送离线消息给: " + std::to_string(userID) + 
              ", 消息数量: " + std::to_string(count));
     
     // 逐条发送离线消息（发送一条删除一条，支持断点续传）
@@ -132,9 +137,9 @@ void SendOfflineMessages(uint8_t userID, ClientSession* session) {
         const Packet& packet = messages.front();  // 获取第一条消息的引用
         
         if (!SendPacket(session->socket_fd, packet)) {
-            WriteLog(LogLevel::ERROR_LEVEL, 
-                     "离线消息发送失败 - 用户ID: " + std::to_string(userID) + 
-                     ", 已发送: " + std::to_string(sentCount) + " 条，剩余: " + std::to_string(messages.size()) + " 条");
+            WriteLog(LogLevel::PASS, 
+                     "离线消息发送中断, 已发送: " + std::to_string(sentCount) + 
+                     " 条，剩余: " + std::to_string(messages.size()) + " 条");
             return; // 发送失败则停止，剩余消息保留
         }
         
@@ -144,8 +149,13 @@ void SendOfflineMessages(uint8_t userID, ClientSession* session) {
     
     // 全部发送成功，删除该用户的离线消息队列
     g_offlineMessages.erase(userID);
-    WriteLog(LogLevel::INFO_LEVEL, 
-             "离线消息推送完成 - 用户ID: " + std::to_string(userID) + 
-             ", 已发送: " + std::to_string(sentCount) + " 条");
+    WriteLog(LogLevel::PASS, 
+             "离线消息推送完成, 共计: " + std::to_string(sentCount) + " 条");
 }
 
+void SetUserName(uint8_t userID, std::string& userName) {
+    if (CheckExist(userID)) {
+        g_userName[userID] = userName;
+        WriteLog(LogLevel::PROCESS, "用户" + std::to_string(userID) + "修改用户名为" + userName);
+    } else { WriteLog(LogLevel::PROCESS, "用户不存在，无法更改用户名"); }
+}

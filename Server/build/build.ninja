@@ -53,6 +53,7 @@ build CMakeFiles/server.dir/main.cpp.obj: CXX_COMPILER__server_unscanned_Debug D
   CONFIG = Debug
   DEP_FILE = CMakeFiles\server.dir\main.cpp.obj.d
   FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
   TARGET_SUPPORT_DIR = CMakeFiles\server.dir
@@ -61,6 +62,7 @@ build CMakeFiles/server.dir/logger.cpp.obj: CXX_COMPILER__server_unscanned_Debug
   CONFIG = Debug
   DEP_FILE = CMakeFiles\server.dir\logger.cpp.obj.d
   FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
   TARGET_SUPPORT_DIR = CMakeFiles\server.dir
@@ -69,6 +71,7 @@ build CMakeFiles/server.dir/socket.cpp.obj: CXX_COMPILER__server_unscanned_Debug
   CONFIG = Debug
   DEP_FILE = CMakeFiles\server.dir\socket.cpp.obj.d
   FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
   TARGET_SUPPORT_DIR = CMakeFiles\server.dir
@@ -77,6 +80,7 @@ build CMakeFiles/server.dir/userControl.cpp.obj: CXX_COMPILER__server_unscanned_
   CONFIG = Debug
   DEP_FILE = CMakeFiles\server.dir\userControl.cpp.obj.d
   FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
   TARGET_SUPPORT_DIR = CMakeFiles\server.dir
@@ -85,8 +89,63 @@ build CMakeFiles/server.dir/handleClient.cpp.obj: CXX_COMPILER__server_unscanned
   CONFIG = Debug
   DEP_FILE = CMakeFiles\server.dir\handleClient.cpp.obj.d
   FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
   OBJECT_DIR = CMakeFiles\server.dir
   OBJECT_FILE_DIR = CMakeFiles\server.dir
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/imgui.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/imgui.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\imgui.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/imgui_draw.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/imgui_draw.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\imgui_draw.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/imgui_tables.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/imgui_tables.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\imgui_tables.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/imgui_widgets.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\imgui_widgets.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/backends/imgui_impl_win32.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/backends/imgui_impl_win32.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\backends\imgui_impl_win32.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui\backends
+  TARGET_SUPPORT_DIR = CMakeFiles\server.dir
+
+build CMakeFiles/server.dir/imgui/backends/imgui_impl_dx11.cpp.obj: CXX_COMPILER__server_unscanned_Debug D$:/Projects/Chatroom/Server/imgui/backends/imgui_impl_dx11.cpp || cmake_object_order_depends_target_server
+  CONFIG = Debug
+  DEP_FILE = CMakeFiles\server.dir\imgui\backends\imgui_impl_dx11.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends
+  OBJECT_DIR = CMakeFiles\server.dir
+  OBJECT_FILE_DIR = CMakeFiles\server.dir\imgui\backends
   TARGET_SUPPORT_DIR = CMakeFiles\server.dir
 
 
@@ -97,10 +156,10 @@ build CMakeFiles/server.dir/handleClient.cpp.obj: CXX_COMPILER__server_unscanned
 #############################################
 # Link the executable server.exe
 
-build server.exe: CXX_EXECUTABLE_LINKER__server_Debug CMakeFiles/server.dir/main.cpp.obj CMakeFiles/server.dir/logger.cpp.obj CMakeFiles/server.dir/socket.cpp.obj CMakeFiles/server.dir/userControl.cpp.obj CMakeFiles/server.dir/handleClient.cpp.obj
+build server.exe: CXX_EXECUTABLE_LINKER__server_Debug CMakeFiles/server.dir/main.cpp.obj CMakeFiles/server.dir/logger.cpp.obj CMakeFiles/server.dir/socket.cpp.obj CMakeFiles/server.dir/userControl.cpp.obj CMakeFiles/server.dir/handleClient.cpp.obj CMakeFiles/server.dir/imgui/imgui.cpp.obj CMakeFiles/server.dir/imgui/imgui_draw.cpp.obj CMakeFiles/server.dir/imgui/imgui_tables.cpp.obj CMakeFiles/server.dir/imgui/imgui_widgets.cpp.obj CMakeFiles/server.dir/imgui/backends/imgui_impl_win32.cpp.obj CMakeFiles/server.dir/imgui/backends/imgui_impl_dx11.cpp.obj
   CONFIG = Debug
   FLAGS = -g
-  LINK_LIBRARIES = -lws2_32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  LINK_LIBRARIES = -lws2_32  -ld3d11  -ld3dcompiler  -ldxgi  -ldwmapi  -limm32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\server.dir
   POST_BUILD = cd .
   PRE_LINK = cd .

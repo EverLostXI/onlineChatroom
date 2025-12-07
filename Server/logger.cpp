@@ -30,12 +30,13 @@ std::string FileNameGen() { // 将日志以当前日期命名，但是不包含�
 // 日志级别转字符串
 std::string LevelToString(LogLevel level) {
     switch (level) {
-        case LogLevel::FATAL_LEVEL: return "FATAL";
-        case LogLevel::ERROR_LEVEL: return "ERROR";
-        case LogLevel::WARN_LEVEL: return "WARN";
-        case LogLevel::INFO_LEVEL: return "INFO";
-        case LogLevel::DEBUG_LEVEL: return "DEBUG";
-        case LogLevel::TRACE_LEVEL: return "TRACE";
+        case LogLevel::INFO: return "INFO";
+        case LogLevel::WARN: return "WARN";
+        case LogLevel::FATAL: return "FATAL";
+        case LogLevel::PASS: return "PASS";
+        case LogLevel::PROCESS: return "PROCESS";
+        case LogLevel::CONNECTION: return "CONNECTION";
+        case LogLevel::BEAT: return "BEAT";
         default: return "UNKNOWN";
     }
 }
@@ -48,9 +49,9 @@ void WriteLog(LogLevel level, const std::string& message) { //包含两个参数
     }
 }
 
-// 调试模式日志函数
+// 调试模式日志函数, 只有打开的时候才会记录PASS和BEAT类型的日志
 void DebugWriteLog(LogLevel level, const std::string& message) {
-    if (level == LogLevel::DEBUG_LEVEL || level == LogLevel::TRACE_LEVEL) {
+    if (level == LogLevel::BEAT || level == LogLevel::PASS) {
         if (!g_debugMode) return;
     }
     WriteLog(level, message);
@@ -64,13 +65,13 @@ void InitializeLogFile() {
         std::cerr << "无法打开日志文件：" << logfilename << std::endl; // 此时无法写入日志（当然）
     } else {
         std::string message = "日志文件初始化成功：" + logfilename;
-        WriteLog(LogLevel::INFO_LEVEL, message);
+        WriteLog(LogLevel::INFO, message);
     }
 }
 
 void CloseLogFile() {
     if (logFile.is_open()) {
-        WriteLog(LogLevel::INFO_LEVEL, "关闭日志文件");
+        WriteLog(LogLevel::INFO, "关闭日志文件");
         logFile.close();
     }
 }

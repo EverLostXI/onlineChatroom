@@ -26,23 +26,23 @@ bool InitializeWinSock() {
     WSADATA wsadata;
     if (WSAStartup(MAKEWORD(2,2), &wsadata) !=0) {
         std::string errormessage = "WSA启动失败:" + std::to_string(WSAGetLastError());
-        WriteLog(LogLevel::FATAL_LEVEL, errormessage);
+        WriteLog(LogLevel::FATAL, errormessage);
         return false;
     }
-    DebugWriteLog(LogLevel::DEBUG_LEVEL, "WinSock 2.2 初始化成功");
+    WriteLog(LogLevel::INFO, "WinSock 2.2 初始化成功");
     return true;
 }
 
 void CleanupWinSock() {
     WSACleanup();
-    DebugWriteLog(LogLevel::DEBUG_LEVEL, "WinSock 清理完成");
+    WriteLog(LogLevel::INFO, "WinSock 清理完成");
 }
 
 
 // 配置服务器地址
 int SetupServerAddress(const int port, sockaddr_in& address_info) {
     if (port <= 0 || port > 65535) {
-        WriteLog(LogLevel::FATAL_LEVEL, "配置的端口号无效");
+        WriteLog(LogLevel::FATAL, "配置的服务器端口号无效");
         return -1;
     }
     memset(&address_info, 0, sizeof(address_info)); // 清零结构体

@@ -1,32 +1,68 @@
 [
 {
   "directory": "D:/Projects/Chatroom/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\main.cpp.obj -c D:\\Projects\\Chatroom\\Server\\main.cpp",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\main.cpp.obj -c D:\\Projects\\Chatroom\\Server\\main.cpp",
   "file": "D:/Projects/Chatroom/Server/main.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/main.cpp.obj"
 },
 {
   "directory": "D:/Projects/Chatroom/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\logger.cpp.obj -c D:\\Projects\\Chatroom\\Server\\logger.cpp",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\logger.cpp.obj -c D:\\Projects\\Chatroom\\Server\\logger.cpp",
   "file": "D:/Projects/Chatroom/Server/logger.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/logger.cpp.obj"
 },
 {
   "directory": "D:/Projects/Chatroom/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\socket.cpp.obj -c D:\\Projects\\Chatroom\\Server\\socket.cpp",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\socket.cpp.obj -c D:\\Projects\\Chatroom\\Server\\socket.cpp",
   "file": "D:/Projects/Chatroom/Server/socket.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/socket.cpp.obj"
 },
 {
   "directory": "D:/Projects/Chatroom/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\userControl.cpp.obj -c D:\\Projects\\Chatroom\\Server\\userControl.cpp",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\userControl.cpp.obj -c D:\\Projects\\Chatroom\\Server\\userControl.cpp",
   "file": "D:/Projects/Chatroom/Server/userControl.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/userControl.cpp.obj"
 },
 {
   "directory": "D:/Projects/Chatroom/Server/build",
-  "command": "D:\\TDM-GCC\\bin\\g++.exe -g -std=gnu++17 -o CMakeFiles\\server.dir\\handleClient.cpp.obj -c D:\\Projects\\Chatroom\\Server\\handleClient.cpp",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\handleClient.cpp.obj -c D:\\Projects\\Chatroom\\Server\\handleClient.cpp",
   "file": "D:/Projects/Chatroom/Server/handleClient.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/handleClient.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\imgui.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\imgui.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/imgui.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/imgui.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\imgui_draw.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\imgui_draw.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/imgui_draw.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/imgui_draw.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\imgui_tables.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\imgui_tables.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/imgui_tables.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/imgui_tables.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\imgui_widgets.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\imgui_widgets.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/imgui_widgets.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/imgui_widgets.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\backends\\imgui_impl_win32.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\backends\\imgui_impl_win32.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/backends/imgui_impl_win32.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/backends/imgui_impl_win32.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\backends\\imgui_impl_dx11.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\backends\\imgui_impl_dx11.cpp",
+  "file": "D:/Projects/Chatroom/Server/imgui/backends/imgui_impl_dx11.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/backends/imgui_impl_dx11.cpp.obj"
 }
 ]
