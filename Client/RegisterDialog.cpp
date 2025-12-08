@@ -27,6 +27,13 @@ void RegisterDialog::on_registerButton_clicked()
         return;
     }
 
+    bool isNumeric;
+    uint8_t userId = username.toUShort(&isNumeric); // toUShort可以安全地转为uint8_t
+    if (!isNumeric) {
+        QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
+        return;
+    }
+
     // 2. 检查两次输入的密码是否一致
     if (password != confirm) {
         QMessageBox::warning(this, "注册失败", "两次输入的密码不一致！");
@@ -39,6 +46,7 @@ void RegisterDialog::on_registerButton_clicked()
     // TODOTODOTODO: 实现真正的账号存储逻辑
     // 3. 发射信号，把注册任务交给 NetworkManager
     emit registrationRequested(username, password);
+    QMessageBox::information(this, "成功", "注册成功！");
 
     // 注册成功后，关闭对话框并返回 Accepted 状态
     //accept();
@@ -49,3 +57,4 @@ void RegisterDialog::on_backButton_clicked()
     // 点击返回，关闭对话框并返回 Rejected 状态
     reject();
 }
+

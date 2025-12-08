@@ -27,6 +27,7 @@ private slots:
 
     void on_loginButton_clicked();
     void on_registerButton_clicked();
+    void on_setServerButton_clicked();
 
     // === 新增的槽函数，用于响应NetworkManager的信号 ===
     void onLoginSuccess();
@@ -35,6 +36,8 @@ private slots:
 
 private:
     Ui::LoginDialog *ui;
+    // === 新增：临时存储尝试登录的ID ===
+    uint8_t m_attemptingUserId;
 
 };
 

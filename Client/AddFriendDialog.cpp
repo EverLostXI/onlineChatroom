@@ -13,6 +13,7 @@ AddFriendDialog::AddFriendDialog(QWidget *parent)
     , m_addedFriendId(-1) // 初始化为无效值
 {
     ui->setupUi(this);
+    setWindowTitle("添加好友");
 
     // 1. 设置输入框只接受0-255的整数
     // 确保你的输入框 objectName 是 friendIdLineEdit
@@ -56,7 +57,7 @@ void AddFriendDialog::onOkButtonClicked()
 
     // 3. 调用NetworkManager发送请求
     // [注意] 自己的ID暂时硬编码为1，后续需要从登录信息中获取
-    uint8_t selfId = NetworkManager::selfId();
+    uint8_t selfId = NetworkManager::instance().selfId();
     NetworkManager::instance().sendAddFriendRequest(selfId, static_cast<uint8_t>(friendId));
 
     // 注意：我们在这里不关闭对话框，而是等待服务器的响应
