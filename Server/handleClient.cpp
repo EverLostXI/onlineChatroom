@@ -35,7 +35,7 @@ static void ForwardToUser(Packet& packet, uint8_t senderID, uint8_t receiverID, 
                         sent = true;
                     } else {
                         // 时序问题：检查时在线，但现在已离线
-                        g_offlineMessages[receiverID].push_back(packet);
+                        SaveOfflineMessages(receiverID, packet);
                     }
                 }
                 // 在释放锁后记录日志
@@ -156,6 +156,9 @@ static void HandleCreateGroup(Packet& receivedPacket, ClientSession* sessionPtr)
     uint8_t creatorID = receivedPacket.getsendid();
     std::vector<uint8_t> memberList = receivedPacket.getField1();
     std::string groupName = receivedPacket.getField2Str();
+
+    // 将创建者添加到成员列表，这样服务器才能正确转发群聊消息
+    memberList.push_back(creatorID);
     
     // 调用创建群聊函数
     bool success = CreateGroup(groupName, memberList);
@@ -163,12 +166,12 @@ static void HandleCreateGroup(Packet& receivedPacket, ClientSession* sessionPtr)
     // 向群聊成员转发创建群聊消息
     if (success) {
         for (uint8_t memberID : memberList) { // 发送过来的消息中的成员列表中不含创建者
+            if (memberID == creatorID) {
+                continue;
+            }
             ForwardToUser(receivedPacket, creatorID, memberID, "创建群聊");
         }
     }
-
-    // 将创建者添加到成员列表，这样服务器才能正确转发群聊消息
-    memberList.push_back(creatorID);
 
     // 向创建者返回成功
     Packet response = Packet::makeCreGroRe(success);
@@ -186,6 +189,8 @@ static void PassGroupMsg(Packet& receivedPacket, ClientSession* sessionPtr) {
     uint8_t senderID = receivedPacket.getsendid();
     std::string groupName = receivedPacket.getField2Str();
 
+    WriteLog(LogLevel::PASS, "收到群聊消息 - 发送者: " + std::to_string(senderID) + ", 群聊: " + groupName);
+
     // 复制群成员列表（最小化持锁时间）
     std::vector<uint8_t> memberList;
     {
@@ -200,6 +205,7 @@ static void PassGroupMsg(Packet& receivedPacket, ClientSession* sessionPtr) {
         // 获取群成员列表
         memberList = g_groupChat[groupName];
     }
+
 
     for (uint8_t memberID : memberList) {
         // 跳过发送者自己

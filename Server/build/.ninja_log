@@ -1,10 +1,10 @@
 # ninja log v7
 7	2776	7864821988017159	CMakeFiles/server.dir/server.cpp.obj	93bf1ce319282c23
-2671	4085	7868875267263274	server.exe	10f37c3441a1600
-13	1004	7868854250456297	CMakeFiles/server.dir/logger.cpp.obj	a16b2b2ecdaf03fc
+2467	4337	7869021712688883	server.exe	10f37c3441a1600
+7	844	7868878641324999	CMakeFiles/server.dir/logger.cpp.obj	a16b2b2ecdaf03fc
 16	2257	7868854250491746	CMakeFiles/server.dir/socket.cpp.obj	6e78b51f7052636a
 7	2477	7868854250378599	CMakeFiles/server.dir/main.cpp.obj	6c21a32c0702a10b
-7	2134	7868871907322627	CMakeFiles/server.dir/handleClient.cpp.obj	dbf4a69ca2a3596d
+8	2281	7869026548769352	CMakeFiles/server.dir/handleClient.cpp.obj	dbf4a69ca2a3596d
 8	2532	7868875240634458	CMakeFiles/server.dir/userControl.cpp.obj	d01633d55b0ea6c9
 232	43518	7868252321534904	CMakeFiles/server.dir/imgui/backends/imgui_impl_win32.cpp.obj	a6cb19468ea6e496
 223	43763	7868252321442835	CMakeFiles/server.dir/imgui/imgui_tables.cpp.obj	adcfcf527bb875be
@@ -12,9 +12,4 @@
 215	45895	7868252321366127	CMakeFiles/server.dir/imgui/imgui.cpp.obj	ef2d423bd54bfaa5
 15	2411	7868253295831081	CMakeFiles/server.dir/imgui/imgui_widgets.cpp.obj	6bc6e2e304c2c54f
 8	2004	7868253430423744	CMakeFiles/server.dir/imgui/imgui_draw.cpp.obj	466fff16d8a3f965
-13	2670	7868875240688756	CMakeFiles/server.dir/monitor.cpp.obj	e278f73b927a35c7
-9	831	7868878441749839	CMakeFiles/server.dir/logger.cpp.obj	a16b2b2ecdaf03fc
 14	2472	7868878441799701	CMakeFiles/server.dir/monitor.cpp.obj	e278f73b927a35c7
-2472	3902	7868878466374397	server.exe	10f37c3441a1600
-7	844	7868878641324999	CMakeFiles/server.dir/logger.cpp.obj	a16b2b2ecdaf03fc
-845	2403	7868878649711382	server.exe	10f37c3441a1600

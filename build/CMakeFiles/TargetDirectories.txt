@@ -1,0 +1,3 @@
+D:/Projects/Chatroom/build/CMakeFiles/server.dir
+D:/Projects/Chatroom/build/CMakeFiles/edit_cache.dir
+D:/Projects/Chatroom/build/CMakeFiles/rebuild_cache.dir

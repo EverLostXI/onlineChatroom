@@ -1,0 +1,14 @@
+# ninja log v7
+7	1674	7869068665827226	CMakeFiles/server.dir/logger.cpp.obj	a16b2b2ecdaf03fc
+61	2472	7869068666370555	CMakeFiles/server.dir/imgui/backends/imgui_impl_win32.cpp.obj	a6cb19468ea6e496
+49	2846	7869068666241528	CMakeFiles/server.dir/imgui/imgui_tables.cpp.obj	adcfcf527bb875be
+69	3418	7869068666445706	CMakeFiles/server.dir/imgui/backends/imgui_impl_dx11.cpp.obj	b1ffff675747d496
+11	3634	7869068665867547	CMakeFiles/server.dir/socket.cpp.obj	6e78b51f7052636a
+3	3823	7869068665778602	CMakeFiles/server.dir/main.cpp.obj	6c21a32c0702a10b
+43	4034	7869068666191310	CMakeFiles/server.dir/imgui/imgui_draw.cpp.obj	466fff16d8a3f965
+20	4224	7869068665955194	CMakeFiles/server.dir/handleClient.cpp.obj	dbf4a69ca2a3596d
+56	4225	7869068666317114	CMakeFiles/server.dir/imgui/imgui_widgets.cpp.obj	6bc6e2e304c2c54f
+16	4358	7869068665912766	CMakeFiles/server.dir/userControl.cpp.obj	d01633d55b0ea6c9
+25	4483	7869068666020591	CMakeFiles/server.dir/monitor.cpp.obj	e278f73b927a35c7
+34	5032	7869068666095637	CMakeFiles/server.dir/imgui/imgui.cpp.obj	ef2d423bd54bfaa5
+5032	6634	7869068716074215	server.exe	10f37c3441a1600
