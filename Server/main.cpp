@@ -1,12 +1,10 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <thread>
 // 网络连接部分
 #include <winsock2.h>
-#include <windows.h>
 #include <ws2tcpip.h>
-// 线程库
-#include <thread>
 // 消息封装类（服务器专用版本，不依赖Qt）
 #include "chatMsg_server.hpp"
 // 引入各模块头文件
@@ -14,11 +12,7 @@
 #include "headers/socket.h"
 #include "headers/userControl.h"
 #include "headers/handleClient.h"
-// Imgui库
-#include "imgui/imgui.h"
-#include "imgui/backends/imgui_impl_win32.h"
-#include "imgui/backends/imgui_impl_dx11.h"
-#include <d3d11.h>
+#include "headers/Monitor.h"
 
 // TODO: 添加监视窗口，包含用户列表，群聊列表，在线客户端列表，usersession跟踪，手动控制map绑定
 
@@ -27,15 +21,16 @@ extern const int PORT = 8888;
 extern const int BACKLOG = 5;
 extern const int HEARTBEAT_TIMEOUT = 30;
 
+
 int main() {
+    // 启动UI监视窗口线程
+    std::thread uiThread(RunMonitorUI);
+    uiThread.detach();  // 独立运行
+
     // 初始化日志文件
     InitializeLogFile();
 
-    // 标记是否启用debug模式
-    if (g_debugMode) {
-        WriteLog(LogLevel::INFO, "-----debug模式已启用-----");
-    }
-    
+    WriteLog(LogLevel::INFO, "监视窗口已启动");
 
     // 初始化WinSock
     if (!InitializeWinSock()) {

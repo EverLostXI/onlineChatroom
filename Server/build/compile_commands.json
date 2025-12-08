@@ -31,6 +31,12 @@
 },
 {
   "directory": "D:/Projects/Chatroom/Server/build",
+  "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\monitor.cpp.obj -c D:\\Projects\\Chatroom\\Server\\monitor.cpp",
+  "file": "D:/Projects/Chatroom/Server/monitor.cpp",
+  "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/monitor.cpp.obj"
+},
+{
+  "directory": "D:/Projects/Chatroom/Server/build",
   "command": "D:\\TDM-GCC\\bin\\g++.exe -ID:/Projects/Chatroom/Server -ID:/Projects/Chatroom/Server/imgui -ID:/Projects/Chatroom/Server/imgui/backends -g -std=gnu++17 -o CMakeFiles\\server.dir\\imgui\\imgui.cpp.obj -c D:\\Projects\\Chatroom\\Server\\imgui\\imgui.cpp",
   "file": "D:/Projects/Chatroom/Server/imgui/imgui.cpp",
   "output": "D:/Projects/Chatroom/Server/build/CMakeFiles/server.dir/imgui/imgui.cpp.obj"

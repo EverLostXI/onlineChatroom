@@ -4,10 +4,20 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
+#include <vector>
 
 // 全局变量定义
 std::ofstream logFile;
-bool g_debugMode = true;
+
+
+// UI日志缓冲区
+std::vector<std::string> g_forwardMsgBuffer;
+std::vector<std::string> g_requestMsgBuffer;
+std::vector<std::string> g_uiLogBuffer;
+std::mutex g_forwardMsgMutex;  // 转发消息专用锁
+std::mutex g_requestMsgMutex;  // 请求消息专用锁
+std::mutex g_uiLogMutex;       // 日志缓冲区专用锁
 
 // 获取时间戳
 std::string TimeStamp() {
@@ -36,26 +46,40 @@ std::string LevelToString(LogLevel level) {
         case LogLevel::PASS: return "PASS";
         case LogLevel::PROCESS: return "PROCESS";
         case LogLevel::CONNECTION: return "CONNECTION";
-        case LogLevel::BEAT: return "BEAT";
         default: return "UNKNOWN";
     }
 }
 // 日志写入函数
 void WriteLog(LogLevel level, const std::string& message) { //包含两个参数：重要级，消息内容
+    std::string fullLog = TimeStamp() + "[" + LevelToString(level) + "]" + message;
+    
     if (logFile.is_open()) {
-        logFile << TimeStamp() << "[" << LevelToString(level) << "]" << message << std::endl;
+        logFile << fullLog << std::endl;
         logFile.flush(); //立即刷新缓冲区
-        std::cout << message << std::endl;
+    }
+    
+    // 添加到UI日志缓冲区
+    if (level == LogLevel::PASS) {
+        std::lock_guard<std::mutex> lock(g_forwardMsgMutex);
+        g_forwardMsgBuffer.push_back(TimeStamp() + " " + message);
+        if (g_forwardMsgBuffer.size() > 500) {
+        g_forwardMsgBuffer.erase(g_forwardMsgBuffer.begin());
+        }
+    } else if (level == LogLevel::PROCESS) {
+        std::lock_guard<std::mutex> lock(g_requestMsgMutex);
+        g_requestMsgBuffer.push_back(TimeStamp() + " " + message);
+        if (g_requestMsgBuffer.size() > 500) {
+        g_requestMsgBuffer.erase(g_requestMsgBuffer.begin());
+        }
+    } else {
+        std::lock_guard<std::mutex> lock(g_uiLogMutex);
+        g_uiLogBuffer.push_back(fullLog);
+        if (g_uiLogBuffer.size() > 1000) {
+        g_uiLogBuffer.erase(g_uiLogBuffer.begin());
+        }
     }
 }
 
-// 调试模式日志函数, 只有打开的时候才会记录PASS和BEAT类型的日志
-void DebugWriteLog(LogLevel level, const std::string& message) {
-    if (level == LogLevel::BEAT || level == LogLevel::PASS) {
-        if (!g_debugMode) return;
-    }
-    WriteLog(level, message);
-}
 
 void InitializeLogFile() {
     const std::string LOG_FOLDER = "log/";

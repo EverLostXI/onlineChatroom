@@ -22,6 +22,7 @@ add_executable(server
     socket.cpp
     userControl.cpp
     handleClient.cpp
+    monitor.cpp
     ${IMGUI_SOURCES}
 )
 

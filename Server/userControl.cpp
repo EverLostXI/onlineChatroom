@@ -2,6 +2,8 @@
 #include "headers/logger.h"
 #include "headers/socket.h"
 #include <cstdint>
+#include <mutex>
+#include <chrono>
 
 // 全局变量定义
 std::map<uint8_t, std::string> g_userCredentials;
@@ -9,13 +11,15 @@ std::map<uint8_t, ClientSession*> g_userSessions;
 std::map<uint8_t, std::vector<Packet>> g_offlineMessages;
 std::map<std::string, std::vector<uint8_t>> g_groupChat;
 std::map<uint8_t, std::string> g_userName;
+std::mutex g_sessionMutex;
 
 // ClientSession 类成员函数实现
 ClientSession::ClientSession(SOCKET fd, const std::string& ip, unsigned short port)
     : socket_fd(fd), 
       client_ip(ip), 
       client_port(port), 
-      userid(0)
+      userid(0),
+      lastHeartbeatTime(std::chrono::steady_clock::now())  // 初始化心跳时间
 {
     std::string logmessage = "客户端连接: IP = " + client_ip + ", 端口 = " + std::to_string(client_port);
     WriteLog(LogLevel::CONNECTION, logmessage);
@@ -40,6 +44,7 @@ void ClientSession::setID(uint8_t id) {
 
 // 检查用户是否存在
 bool CheckExist(uint8_t userID) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
     if (g_userSessions.count(userID)) {
         return true;
     }
@@ -47,6 +52,7 @@ bool CheckExist(uint8_t userID) {
 }
 // 检查用户是否在线
 bool CheckOnline(uint8_t userID) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
     // 先检查是否存在，避免 map 自动创建条目
     if (!g_userSessions.count(userID)) {
         return false;
@@ -58,31 +64,50 @@ bool CheckOnline(uint8_t userID) {
 }
 // 先检查是否存在，再检查是否在线
 int CheckUser(uint8_t userID) {
-    if (!CheckExist(userID)) {
-        return 0;
-    } else if (!CheckOnline(userID)) {
-        return 1;
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
+    // 直接访问 g_userSessions，避免重复加锁
+    if (!g_userSessions.count(userID)) {
+        return 0;  // 用户不存在
     }
-    return 2;
+    if (g_userSessions[userID] == nullptr) {
+        return 1;  // 用户存在但离线
+    }
+    return 2;  // 用户在线
 }
 
 // 注册函数: 1. 添加账户密码键值对 2. 给id绑定一个空的会话指针
 bool Signup(uint8_t userID, const std::string &password) {
-    if (CheckExist(userID)) { // 检查用户是否已经存在（id唯一）
-                    WriteLog(LogLevel::PROCESS, "账号创建失败 - ID已存在: " + std::to_string(userID));
-                    return false;
-                } else {
-                    g_userCredentials[userID] = password;
-                    g_userSessions[userID] = nullptr;
-                    WriteLog(LogLevel::PROCESS, "账号创建成功: " + std::to_string(userID));
-                    return true;
-                }
+    bool success = false;
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        // 直接检查 g_userSessions，避免调用 CheckExist 导致重复加锁
+        if (g_userSessions.count(userID)) {
+            success = false;
+        } else {
+            g_userCredentials[userID] = password;
+            g_userSessions[userID] = nullptr;
+            success = true;
+        }
+    }
+    
+    // 在释放锁后记录日志
+    if (success) {
+        WriteLog(LogLevel::PROCESS, "账号创建成功: " + std::to_string(userID));
+    } else {
+        WriteLog(LogLevel::PROCESS, "账号创建失败 - ID已存在: " + std::to_string(userID));
+    }
+    
+    return success;
 }
 
 // 登录函数:1. 验证登录凭证，2. 将id与这个会话线程绑定
 bool LoginConnect(uint8_t userID, const std::string &Password, ClientSession* session) {
-    if (CheckExist(userID)) { // 检查map中是否存有该用户ID
-        if (g_userCredentials[userID] == Password) { // 如果存在，比较密码
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
+    // 直接检查 g_userSessions，避免调用 CheckExist 导致重复加锁
+    if (g_userSessions.count(userID)) {
+        if (g_userSessions[userID] != nullptr) {
+            return false;
+        } else if (g_userCredentials[userID] == Password) {
             g_userSessions[userID] = session;
             session->setID(userID);
             return true;
@@ -93,7 +118,9 @@ bool LoginConnect(uint8_t userID, const std::string &Password, ClientSession* se
 
 // 下线函数: 删除会话，把id绑定的会话指针改为空指针（这个函数只在会话登录了账户的情况下才要调用）
 void LogOff(uint8_t userID) {
-    if (CheckExist(userID)) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
+    // 直接检查 g_userSessions，避免调用 CheckExist 导致重复加锁
+    if (g_userSessions.count(userID)) {
         delete g_userSessions[userID];
         g_userSessions[userID] = nullptr;
     }
@@ -101,6 +128,7 @@ void LogOff(uint8_t userID) {
 
 // 创建群聊函数
 bool CreateGroup(std::string &groupName, std::vector<uint8_t> &memberList) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
     // 先检查群聊存不存在
     if (g_groupChat.count(groupName)) {
         WriteLog(LogLevel::PROCESS, "群聊已经存在");
@@ -113,49 +141,69 @@ bool CreateGroup(std::string &groupName, std::vector<uint8_t> &memberList) {
 
 // 存储离线消息: 如果发现接收者不在线，则把要发送的消息暂存到离线消息队列g_offlineMessages中
 void SaveOfflineMessages(uint8_t userID, Packet message) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
     // 直接添加到离线消息队列（如果key不存在，map会自动创建空vector）
     g_offlineMessages[userID].push_back(message);
 }
 
 // 发送离线消息函数：当用户上线时，将所有离线消息推送给该用户
 void SendOfflineMessages(uint8_t userID, ClientSession* session) {
-    // 判断有没有离线消息（有key就有）
-    if (!g_offlineMessages.count(userID)) {
-        return;
+    std::vector<Packet> messagesToSend;
+    
+    // 复制离线消息到本地（最小化持锁时间）
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        // 判断有没有离线消息（有key就有）
+        if (!g_offlineMessages.count(userID)) {
+            return;
+        }
+        messagesToSend = g_offlineMessages[userID];
+        // 先清空，发送失败再恢复
+        g_offlineMessages.erase(userID);
     }
     
-    std::vector<Packet>& messages = g_offlineMessages[userID];
-    int count = messages.size();
-
-    DebugWriteLog(LogLevel::PASS, 
+    int count = messagesToSend.size();
+    WriteLog(LogLevel::PASS, 
              "推送离线消息给: " + std::to_string(userID) + 
              ", 消息数量: " + std::to_string(count));
     
-    // 逐条发送离线消息（发送一条删除一条，支持断点续传）
+    // 逐条发送离线消息
     int sentCount = 0;
-    while (!messages.empty()) {
-        const Packet& packet = messages.front();  // 获取第一条消息的引用
-        
-        if (!SendPacket(session->socket_fd, packet)) {
+    for (size_t i = 0; i < messagesToSend.size(); ++i) {
+        if (!SendPacket(session->socket_fd, messagesToSend[i])) {
             WriteLog(LogLevel::PASS, 
                      "离线消息发送中断, 已发送: " + std::to_string(sentCount) + 
-                     " 条，剩余: " + std::to_string(messages.size()) + " 条");
-            return; // 发送失败则停止，剩余消息保留
+                     " 条，剩余: " + std::to_string(messagesToSend.size() - i) + " 条");
+            
+            // 将未发送的消息重新保存
+            std::lock_guard<std::mutex> lock(g_sessionMutex);
+            for (size_t j = i; j < messagesToSend.size(); ++j) {
+                g_offlineMessages[userID].push_back(messagesToSend[j]);
+            }
+            return;
         }
-        
-        messages.erase(messages.begin());  // 发送成功，删除这条消息
         sentCount++;
     }
     
-    // 全部发送成功，删除该用户的离线消息队列
-    g_offlineMessages.erase(userID);
     WriteLog(LogLevel::PASS, 
              "离线消息推送完成, 共计: " + std::to_string(sentCount) + " 条");
 }
 
 void SetUserName(uint8_t userID, std::string& userName) {
-    if (CheckExist(userID)) {
-        g_userName[userID] = userName;
+    bool exists = false;
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        // 直接检查 g_userSessions，避免调用 CheckExist 导致重复加锁
+        if (g_userSessions.count(userID)) {
+            g_userName[userID] = userName;
+            exists = true;
+        }
+    }
+    
+    // 在释放锁后记录日志
+    if (exists) {
         WriteLog(LogLevel::PROCESS, "用户" + std::to_string(userID) + "修改用户名为" + userName);
-    } else { WriteLog(LogLevel::PROCESS, "用户不存在，无法更改用户名"); }
+    } else { 
+        WriteLog(LogLevel::PROCESS, "用户不存在，无法更改用户名"); 
+    }
 }

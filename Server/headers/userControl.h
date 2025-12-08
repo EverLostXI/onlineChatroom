@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <mutex>
+#include <chrono>
 #include <winsock2.h>
 #include "../chatMsg_server.hpp"
 
@@ -13,6 +15,7 @@ public:
     std::string client_ip;     // 客户端IP
     unsigned short client_port; // 客户端端口
     uint8_t userid;            // 用户ID
+    std::chrono::steady_clock::time_point lastHeartbeatTime;  // 最后一次心跳时间
 
     // 构造函数
     ClientSession(SOCKET fd, const std::string& ip, unsigned short port);
@@ -26,6 +29,7 @@ extern std::map<uint8_t, std::string> g_userCredentials;       // 用户凭证(I
 extern std::map<uint8_t, ClientSession*> g_userSessions;       // 用户会话(ID->会话指针)
 extern std::map<uint8_t, std::vector<Packet>> g_offlineMessages; // 离线消息队列
 extern std::map<std::string, std::vector<uint8_t>> g_groupChat;  // 群聊(群名->成员列表)
+extern std::mutex g_sessionMutex;  // 保护用户会话数据的互斥锁
 
 // 用户检查函数
 bool CheckExist(uint8_t userID);   // 检查用户是否存在

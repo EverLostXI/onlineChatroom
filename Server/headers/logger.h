@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <fstream>
+#include <vector>
+#include <mutex>
 
 // 日志级别枚举
 
@@ -11,14 +13,20 @@ enum class LogLevel {
     PASS, // 服务器只负责转发的消息
     PROCESS, // 需要服务器运算的消息
     CONNECTION, // 客户端连接有关
-    BEAT // 心跳
 };
 
 // 全局日志文件句柄
 extern std::ofstream logFile;
 
-// 全局调试模式开关
-extern bool g_debugMode;
+
+
+// UI日志缓冲区（供Monitor显示）
+extern std::vector<std::string> g_forwardMsgBuffer;
+extern std::vector<std::string> g_requestMsgBuffer;
+extern std::vector<std::string> g_uiLogBuffer;
+extern std::mutex g_forwardMsgMutex;
+extern std::mutex g_requestMsgMutex;
+extern std::mutex g_uiLogMutex;
 
 // 函数声明
 std::string TimeStamp();                          // 获取时间戳

@@ -4,24 +4,47 @@
 #include "headers/userControl.h"
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <vector>
 
 // 全局心跳超时时间（在main中定义）
 extern const int HEARTBEAT_TIMEOUT;
+extern std::mutex g_sessionMutex;
 
 // 消息转发辅助函数(判断对面是否存在，是否在线，然后转发消息)
 static void ForwardToUser(Packet& packet, uint8_t senderID, uint8_t receiverID, const std::string& msgType) {
     int userStatus = CheckUser(receiverID);
+    
     switch (userStatus) {
         case 0:
-            DebugWriteLog(LogLevel::PASS, std::to_string(senderID) + "发送的" + msgType + ", 接收人不存在");
+            WriteLog(LogLevel::PASS, std::to_string(senderID) + "发送的" + msgType + ", 接收人不存在");
             break;
         case 1:
-            g_offlineMessages[receiverID].push_back(packet);
-            DebugWriteLog(LogLevel::PASS, std::to_string(receiverID) + "不在线, " + msgType + "保存至离线消息");
+            SaveOfflineMessages(receiverID, packet);
+            WriteLog(LogLevel::PASS, std::to_string(senderID) + "发送了" + msgType);
+            WriteLog(LogLevel::PASS, std::to_string(receiverID) + "不在线, 保存至离线消息");
             break;
         case 2:
-            SendPacket(g_userSessions[receiverID]->socket_fd, packet);
-            DebugWriteLog(LogLevel::PASS, msgType + "已转发给: " + std::to_string(receiverID));
+            {
+                bool sent = false;
+                {
+                    // 再次检查并发送（处理TOCTOU问题）
+                    std::lock_guard<std::mutex> lock(g_sessionMutex);
+                    if (g_userSessions.count(receiverID) && g_userSessions[receiverID] != nullptr) {
+                        SendPacket(g_userSessions[receiverID]->socket_fd, packet);
+                        sent = true;
+                    } else {
+                        // 时序问题：检查时在线，但现在已离线
+                        g_offlineMessages[receiverID].push_back(packet);
+                    }
+                }
+                // 在释放锁后记录日志
+                if (sent) {
+                    WriteLog(LogLevel::PASS, "来自" + std::to_string(senderID) + "的" + msgType + "已转发给: " + std::to_string(receiverID));
+                } else {
+                    WriteLog(LogLevel::PASS, "用户" + std::to_string(receiverID) + "已离线，消息保存为离线");
+                }
+            }
             break;
     }
 }
@@ -29,7 +52,9 @@ static void ForwardToUser(Packet& packet, uint8_t senderID, uint8_t receiverID, 
 static void UpdateHeartbeat(std::chrono::steady_clock::time_point& lastHeartbeat, ClientSession* sessionPtr) {
     // 更新心跳时间
     lastHeartbeat = std::chrono::steady_clock::now();
-    DebugWriteLog(LogLevel::BEAT, "收到心跳来自: " + std::to_string(sessionPtr->userid));
+    if (sessionPtr) {
+        sessionPtr->lastHeartbeatTime = lastHeartbeat;  // 同步更新ClientSession的心跳时间（用于UI闪烁效果）
+    }
 }
 
 static void HandleLogin(Packet& receivedPacket, ClientSession* sessionPtr) {
@@ -66,14 +91,13 @@ static void HandleCreateAccount(Packet& receivedPacket, ClientSession* sessionPt
     uint8_t userID = receivedPacket.getsendid();
     std::string password = receivedPacket.getField2Str();
     
-    WriteLog(LogLevel::PROCESS, "注册账号请求: " + std::to_string(userID));
-    
     // 调用注册函数
     bool success = Signup(userID, password);
     
     // 构造响应包并发送
     Packet response = Packet::makeRegiRe(success);
     SendPacket(sessionPtr->socket_fd, response);
+    WriteLog(LogLevel::PROCESS, "新账号注册: " + std::to_string(userID));
 }
 
 static void PassAddFriend(Packet& receivedPacket, ClientSession* sessionPtr) {
@@ -85,10 +109,6 @@ static void PassAddFriend(Packet& receivedPacket, ClientSession* sessionPtr) {
     
     uint8_t senderID = receivedPacket.getsendid();
     uint8_t receiverID = receivedPacket.getrecvid();
-    
-    DebugWriteLog(LogLevel::PASS, 
-                "收到添加好友请求来自: " + std::to_string(senderID) + 
-                ", 将转发给: " + std::to_string(receiverID));
     
     // 转发消息给接收者
     ForwardToUser(receivedPacket, senderID, receiverID, "好友请求");
@@ -105,10 +125,6 @@ static void PassAddFriendRe(Packet& receivedPacket, ClientSession* sessionPtr) {
     uint8_t senderID = receivedPacket.getsendid();
     uint8_t receiverID = receivedPacket.getrecvid();
     
-    DebugWriteLog(LogLevel::PASS, 
-                "收到添加好友响应来自: " + std::to_string(senderID) + 
-                ", 将转发给: " + std::to_string(receiverID));
-    
     // 转发消息给接收者
     ForwardToUser(receivedPacket, senderID, receiverID, "好友响应");
 }
@@ -123,13 +139,7 @@ static void PassCommonMessage(Packet& receivedPacket, ClientSession* sessionPtr)
     // 从header获取收发信息，从field1获取内容
     uint8_t senderID = receivedPacket.getsendid();
     uint8_t receiverID = receivedPacket.getrecvid();
-    std::string content = receivedPacket.getField1Str();
-    
-    DebugWriteLog(LogLevel::PASS, 
-                "收到私聊消息来自: " + std::to_string(senderID) + 
-                ", 将转发给 " + std::to_string(receiverID) + 
-                ", 内容: " + content);
-    
+
     // 转发消息给接收者
     ForwardToUser(receivedPacket, senderID, receiverID, "私聊消息");
 }
@@ -142,12 +152,11 @@ static void HandleCreateGroup(Packet& receivedPacket, ClientSession* sessionPtr)
     }
     
     WriteLog(LogLevel::PROCESS, "收到创建群组请求来自: " + std::to_string(sessionPtr->userid));
-    
+
     uint8_t creatorID = receivedPacket.getsendid();
     std::vector<uint8_t> memberList = receivedPacket.getField1();
     std::string groupName = receivedPacket.getField2Str();
     
-
     // 调用创建群聊函数
     bool success = CreateGroup(groupName, memberList);
 
@@ -176,23 +185,21 @@ static void PassGroupMsg(Packet& receivedPacket, ClientSession* sessionPtr) {
 
     uint8_t senderID = receivedPacket.getsendid();
     std::string groupName = receivedPacket.getField2Str();
-    std::string messageContent = receivedPacket.getField1Str();
 
-    DebugWriteLog(LogLevel::PASS,
-                    "收到群聊消息来自: " + std::to_string(senderID) +
-                    ", 群聊名称: " + groupName +
-                    ", 内容: " + messageContent);
-
-    // 检查群聊是否存在
-    if (!g_groupChat.count(groupName)) {
-        DebugWriteLog(LogLevel::PASS, 
-                    "群聊不存在: " + groupName + 
-                    ", 发送者为: " + std::to_string(senderID));
-        return;
+    // 复制群成员列表（最小化持锁时间）
+    std::vector<uint8_t> memberList;
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        // 检查群聊是否存在
+        if (!g_groupChat.count(groupName)) {
+            std::string errorMsg = "群聊不存在: " + groupName + 
+                                   ", 发送者为: " + std::to_string(senderID);
+            WriteLog(LogLevel::PASS, errorMsg);
+            return;
+        }
+        // 获取群成员列表
+        memberList = g_groupChat[groupName];
     }
-
-    // 获取群成员列表
-    std::vector<uint8_t>& memberList = g_groupChat[groupName];
 
     for (uint8_t memberID : memberList) {
         // 跳过发送者自己
