@@ -127,7 +127,7 @@ public:
 
         verticalLayoutWidget_7 = new QWidget(MainWindow);
         verticalLayoutWidget_7->setObjectName("verticalLayoutWidget_7");
-        verticalLayoutWidget_7->setGeometry(QRect(119, 59, 82, 31));
+        verticalLayoutWidget_7->setGeometry(QRect(100, 59, 81, 31));
         verticalLayout_6 = new QVBoxLayout(verticalLayoutWidget_7);
         verticalLayout_6->setObjectName("verticalLayout_6");
         verticalLayout_6->setContentsMargins(0, 0, 0, 0);
