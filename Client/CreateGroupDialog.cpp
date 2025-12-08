@@ -7,6 +7,7 @@ CreateGroupDialog::CreateGroupDialog(QWidget *parent) :
     ui(new Ui::CreateGroupDialog)
 {
     ui->setupUi(this);
+    setWindowTitle("创建群聊");
     // 设置为多选模式，虽然在UI里设置了，但在代码里再设置一次更保险
     ui->friendsListWidget->setSelectionMode(QAbstractItemView::MultiSelection);
 }

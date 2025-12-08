@@ -1,0 +1,17 @@
+release/AddFriendDialog.o
+release/CreateGroupDialog.o
+release/LoginDialog.o
+release/MainWindow.o
+release/NetworkManager.o
+release/RegisterDialog.o
+release/SetNickname.o
+release/SetServerDialog.o
+release/main.o
+release/moc_AddFriendDialog.o
+release/moc_CreateGroupDialog.o
+release/moc_LoginDialog.o
+release/moc_MainWindow.o
+release/moc_NetworkManager.o
+release/moc_RegisterDialog.o
+release/moc_SetNickname.o
+release/moc_SetServerDialog.o
