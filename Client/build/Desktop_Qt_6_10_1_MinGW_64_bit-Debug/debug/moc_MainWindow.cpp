@@ -63,7 +63,12 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "groupName",
         "creatorId",
         "QList<uint8_t>",
-        "memberIds"
+        "memberIds",
+        "on_selectImageButton_clicked",
+        "onNewImageReceived",
+        "senderId",
+        "imageData",
+        "fileName"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -99,6 +104,12 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void(const QString &, uint8_t, const QVector<uint8_t> &)>(20, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::QString, 21 }, { 0x80000000 | 12, 22 }, { 0x80000000 | 23, 24 },
         }}),
+        // Slot 'on_selectImageButton_clicked'
+        QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onNewImageReceived'
+        QtMocHelpers::SlotData<void(uint8_t, const QString &, const QByteArray &, const QString &)>(26, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 12, 27 }, { QMetaType::QString, 17 }, { QMetaType::QByteArray, 28 }, { QMetaType::QString, 29 },
+        }}),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -132,6 +143,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 7: _t->onNewMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 8: _t->onCreateGroupResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 9: _t->onAddedToNewGroup((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<uint8_t>>>(_a[3]))); break;
+        case 10: _t->on_selectImageButton_clicked(); break;
+        case 11: _t->onNewImageReceived((*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QByteArray>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[4]))); break;
         default: ;
         }
     }
@@ -156,14 +169,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 12)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 12;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 12)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 10;
+        _id -= 12;
     }
     return _id;
 }

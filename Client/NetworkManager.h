@@ -28,6 +28,17 @@ public:
     uint8_t selfId(); // 改为普通成员函数
     // === 新增：公共的 "setter" 函数 ===
     void setCurrentUserId(uint8_t userId);
+    // [新增] 发送图片消息的公共接口
+    void sendImageMessage(uint8_t selfId,
+                          const std::string& targetId,
+                          bool isGroup,
+                          const std::vector<uint8_t>& imageData,
+                          const std::string& imageName);
+
+    // 设置昵称
+    void sendSetNicknameRequest(const QString& nickname);
+    // 查询用户状态
+    void sendCheckUserStatusRequest(uint8_t targetId);
 
 signals:
     // --- 信号 (用来通知UI) ---
@@ -42,6 +53,16 @@ signals:
     void newMessageReceived(const ChatMessage &message, const QString& conversationId);
     void createGroupResult(bool success, const QString& message);
     void addedToNewGroup(const QString& groupName, uint8_t creatorId, const QVector<uint8_t>& memberIds);
+    // [新增] 专门用于接收图片消息的信号
+    void newImageReceived(uint8_t senderId,
+                          const QString& conversationId,
+                          const QByteArray& imageData,
+                          const QString& fileName);
+
+    // 设置昵称结果
+    void setNicknameResult(bool success);
+    // 查询用户状态结果
+    void checkUserStatusResult(uint8_t userId, const QString& nickname, bool isOnline);
 
 public slots:
     // --- 公共槽 (给其他类调用, 比如UI) ---

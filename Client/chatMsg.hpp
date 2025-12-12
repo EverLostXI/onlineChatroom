@@ -7,6 +7,8 @@
 #include <QtEndian> // <-- 正确，这个头文件专门用于字节序转换
 #include <QTcpSocket> // <-- 添加，用于网络操作
 
+
+
 // 使用Qt的函数
 inline uint16_t h2n16(uint16_t v){ return qToBigEndian(v); }
 inline uint32_t h2n32(uint32_t v){ return qToBigEndian(v); }
@@ -25,8 +27,11 @@ enum class MsgType : uint8_t
     AddFriendReq = 0x07,  // 添加好友请求
     AddFriendRe  = 0x08,  // 添加好友反馈
     Heartbeat    = 0x09,  // 心跳包
-    NormalMsg    = 0x10,   // 普通消息
-    GroupMsg     = 0x11    // [新增] 群聊消息
+    NormalMsg    = 0x10,  // 普通消息
+    GroupMsg     = 0x11,  // 群聊消息
+    ImageMsg     = 0x12,  // 图片消息
+    SetName      = 0x13,  //[新增]设置用户名
+    CheckUser    = 0x14   //[新增]查询用户状态
 };
 
 #pragma pack(push,1)
@@ -48,6 +53,7 @@ struct Header
 class Packet
 {
 public:
+    const Header& internal_get_header_for_debug() const { return hdr; }
 
     // === 新增的公共解析函数 ===
     // 从给定的数据指针和大小中解析出一个完整的数据包
@@ -237,6 +243,68 @@ public:
         return p;
     }
 
+    /* [新增] 方法：创建图片消息包 (支持私聊和群聊) */
+    static Packet makeImageMessage(uint8_t senderId,
+                                   const std::string& targetId,
+                                   bool isGroup,
+                                   const std::vector<uint8_t>& imageData,
+                                   const std::string& imageName)
+    {
+        Packet p(MsgType::ImageMsg);
+        p.hdr.sendid = senderId;
+        p.hdr.success = isGroup;
+
+        // 核心数据：图片二进制内容
+        p.writeFieldRaw(p.field1, imageData.data(), imageData.size());
+
+        // 元数据：图片文件名
+        p.writeField2(imageName);
+
+        // =============================================================
+        // ================ 关键修改：在这里先调用 finish() ================
+        // =============================================================
+        // finish() 会根据 field1 和 field2 当前的 size() 来设置 hdr 里的长度
+        // 此时 field1.size() 是 8696, field2.size() 是 9
+        // 所以 hdr.field1Len 会被正确设置为 8696
+        p.finish();
+        // =============================================================
+
+
+        if (isGroup) {
+            // 如果是群聊，recvid无意义，我们将群ID存放在field3
+            p.writeField3(targetId);
+            // 注意：因为我们提前调用了 finish()，所以这里对 field3 的修改
+            // 不会更新到 hdr.field3Len。我们需要手动更新。
+            p.hdr.field3Len = static_cast<uint16_t>(p.field3.size());
+        } else {
+            // 如果是私聊，将字符串形式的接收者ID转为uint8_t
+            try {
+                p.hdr.recvid = static_cast<uint8_t>(std::stoul(targetId));
+            } catch (const std::exception& e) {
+                p.hdr.recvid = 0;
+            }
+        }
+
+        // 因为 finish() 已经被调用过了，所以函数末尾不需要再调用
+        return p;
+    }
+
+    static Packet SetUserName(uint8_t senderId, const std::string& username) {
+        Packet p(MsgType::SetName);
+        p.hdr.sendid = senderId;
+        p.writeField1(username);
+        p.finish();
+        return p;
+    }
+
+    static Packet CheckUserStatus(uint8_t senderId, uint8_t targetId) {
+        Packet p(MsgType::CheckUser);
+        p.hdr.sendid = senderId;
+        p.hdr.recvid = targetId;  // 注意：这里设置 recvid 为目标用户
+        p.finish();
+        return p;
+    }
+
     uint8_t getsendid()
     {
         return hdr.sendid;
@@ -337,7 +405,7 @@ private:
     /* 向变长区写入原始数据 */
     void writeFieldRaw(std::vector<uint8_t>& field, const void* p, size_t n){ 
         auto* src = static_cast<const uint8_t*>(p);
-        field.insert(field.end(), src, src + n); 
+        field.assign(src, src + n);
     }
     
     /* 向变长区写入字符串 */
@@ -357,3 +425,4 @@ private:
     /* 向变长区4写入字符串 */
     void writeField4(const std::string& s){ writeField(field4, s); }
 };
+

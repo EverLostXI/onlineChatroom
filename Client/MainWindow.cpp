@@ -9,6 +9,8 @@
 #include <QFont>
 #include <QApplication>
 #include <QSettings>
+#include <QLabel>
+#include <QPixmap>
 #include "networkmanager.h"
 #include "SetNickname.h"
 
@@ -28,7 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     // ...
     connect(&NetworkManager::instance(), &NetworkManager::autoAcceptFriendRequest, this, &MainWindow::onAutoAcceptFriendRequest);
     connect(&NetworkManager::instance(), &NetworkManager::newMessageReceived, this, &MainWindow::onNewMessageReceived);
-
+    // [新增] 连接接收图片的信号
+    connect(&NetworkManager::instance(), &NetworkManager::newImageReceived, this, &MainWindow::onNewImageReceived);
     // --- 添加初始的假数据 ---////////////////////////
     /////////////////////////////////////////////////
     m_friends[123] = "张三";
@@ -161,29 +164,89 @@ void MainWindow::onNicknameChanged(const QString& newNickname)
 void MainWindow::on_sendButton_clicked()
 {
     if (m_currentConversationId == "-1") { return; }
-    QString text = ui->messageInputTextEdit->toPlainText().trimmed();
-    if (text.isEmpty()) { return; }
 
     uint8_t myUserId = NetworkManager::instance().selfId();
-
-    // 本地更新UI
-    ChatMessage newMessage = { (int)myUserId, text, QDateTime::currentDateTime() };
-    m_chatHistories[m_currentConversationId].append(newMessage);
-    updateChatHistoryView();
-    ui->messageInputTextEdit->clear();
-
-    // 网络发送逻辑
     bool isGroup = m_groups.contains(m_currentConversationId);
-    if (isGroup) {
-        // [修改] 调用新的群聊发送函数
-        qDebug() << "发送群聊消息到:" << m_currentConversationId;
-        NetworkManager::instance().sendGroupMessage(myUserId, m_currentConversationId, text);
-    } else {
-        // 私聊逻辑保持不变
-        qDebug() << "发送私聊消息到:" << m_currentConversationId;
-        NetworkManager::instance().sendMessage(myUserId, m_currentConversationId.toUInt(), text);
+
+    // --- 智能判断：是发送图片还是发送文字 ---
+    if (!m_selectedImagePath.isEmpty())
+    {
+        // =================================
+        // === 情况一：发送图片            ===
+        // =================================
+        qDebug() << "发送模式：图片。路径：" << m_selectedImagePath;
+
+        QFile file(m_selectedImagePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::warning(this, "错误", "无法打开图片文件！");
+            // 清理状态，让用户可以重新操作
+            m_selectedImagePath.clear();
+            ui->messageInputTextEdit->clear();
+            ui->messageInputTextEdit->setReadOnly(false);
+            return;
+        }
+        QByteArray imageData = file.readAll();
+        file.close();
+
+        QFileInfo fileInfo(m_selectedImagePath);
+        QString fileName = fileInfo.fileName();
+
+        // 准备将图片数据转为 std::vector<uint8_t> 以符合协议接口
+        std::vector<uint8_t> imageDataVec(imageData.begin(), imageData.end());
+
+        // [核心] 调用 NetworkManager 发送图片
+        // 我们将在下一步去 NetworkManager 中创建这个函数
+        NetworkManager::instance().sendImageMessage(
+            myUserId,
+            m_currentConversationId.toStdString(), // 目标ID
+            isGroup,
+            imageDataVec,                          // 图片数据
+            fileName.toStdString()                 // 文件名
+            );
+
+        // [本地UI更新]
+        // 1. 创建一个特殊的文本消息作为占位符
+        QDateTime now = QDateTime::currentDateTime();
+        QString imagePlaceholder = QString("[image:%1]").arg(now.toSecsSinceEpoch());
+        ChatMessage placeholderMsg = { myUserId, imagePlaceholder, now };
+
+        // 2. 将占位符消息存入聊天记录
+        m_chatHistories[m_currentConversationId].append(placeholderMsg);
+
+        // 3. 将真实的图片数据存入我们的“图片柜子”
+        m_imageHistory.insert(now, imageData);
+
+        // 4. 刷新聊天窗口，显示这个占位符（稍后我们会让它显示图片）
+        updateChatHistoryView();
+
+        // 5. 发送后，清理状态
+        m_selectedImagePath.clear();
+        ui->messageInputTextEdit->clear();
+        ui->messageInputTextEdit->setReadOnly(false);
+    }
+    else
+    {
+        // =================================
+        // === 情况二：发送文字 (你的旧逻辑) ===
+        // =================================
+        QString text = ui->messageInputTextEdit->toPlainText().trimmed();
+        if (text.isEmpty()) { return; }
+
+        // 本地更新UI (这部分逻辑保持不变)
+        ChatMessage newMessage = { myUserId, text, QDateTime::currentDateTime() };
+        m_chatHistories[m_currentConversationId].append(newMessage);
+        updateChatHistoryView();
+        ui->messageInputTextEdit->clear();
+
+        // 网络发送逻辑 (这部分逻辑保持不变)
+        if (isGroup) {
+            NetworkManager::instance().sendGroupMessage(myUserId, m_currentConversationId, text);
+        } else {
+            NetworkManager::instance().sendMessage(myUserId, m_currentConversationId.toUInt(), text);
+        }
     }
 }
+
 
 // 这个函数在用户点击左侧列表时被自动调用
 // [修改] on_conversationListWidget_itemClicked
@@ -203,7 +266,6 @@ void MainWindow::on_conversationListWidget_itemClicked(QListWidgetItem *item)
     updateChatHistoryView();
 }
 
-// 这个函数专门根据 m_currentConversationId 来刷新右侧的聊天窗口
 void MainWindow::updateChatHistoryView()
 {
     ui->chatHistoryListWidget->clear();
@@ -218,9 +280,9 @@ void MainWindow::updateChatHistoryView()
 
     for (const ChatMessage& msg : messages)
     {
+        // --- 文本部分 (和原来一样) ---
         QListWidgetItem* item = new QListWidgetItem();
         QString senderName;
-
         QSettings settings("CSC3002", "Chatroom");
         QString myNickname = settings.value("Client/Nickname", "用户0").toString();
 
@@ -228,16 +290,66 @@ void MainWindow::updateChatHistoryView()
             senderName = QString("%1(%2)").arg(myNickname).arg(myUserId);
             item->setTextAlignment(Qt::AlignRight);
         } else {
-            // 好友的消息：显示为"好友昵称(好友ID)"格式
-            // 获取好友的昵称
             QString friendNickname = m_friends.value(msg.senderId, QString("用户%1").arg(msg.senderId));
-            // 格式化为"昵称(ID)"的格式
             senderName = QString("%1(%2)").arg(friendNickname).arg(msg.senderId);
             item->setTextAlignment(Qt::AlignLeft);
         }
 
-        item->setText(senderName + ": " + msg.text);
-        ui->chatHistoryListWidget->addItem(item);
+        // --- 核心改动：判断是显示文字还是图片 ---
+        if (msg.text.startsWith("[image:") && msg.text.endsWith("]"))
+        {
+            // ========================
+            // === 情况一：显示图片 ===
+            // ========================
+            // 1. 创建一个 QLabel 来显示发送者名字
+            QLabel* nameLabel = new QLabel(senderName + ":");
+            nameLabel->setAlignment(static_cast<Qt::AlignmentFlag>(item->textAlignment()));  // 名字和图片对齐
+
+            // 2. 创建一个 QLabel 来显示图片
+            QLabel* imageLabel = new QLabel();
+            QPixmap pixmap;
+            // 从我们的“图片柜子”里，根据时间戳取出图片数据
+            if (m_imageHistory.contains(msg.timestamp)) {
+                pixmap.loadFromData(m_imageHistory.value(msg.timestamp));
+            } else {
+                // 如果找不到图片，显示一个错误提示
+                pixmap = QPixmap(100, 100);
+                pixmap.fill(Qt::gray);
+                // (可以在图片上绘制文字提示)
+            }
+
+            // 3. 缩放图片，避免过大撑爆聊天窗口
+            int maxWidth = ui->chatHistoryListWidget->width() * 0.5; // 最大宽度为聊天窗口的一半
+            if (pixmap.width() > maxWidth) {
+                pixmap = pixmap.scaledToWidth(maxWidth, Qt::SmoothTransformation);
+            }
+            imageLabel->setPixmap(pixmap);
+            imageLabel->setAlignment(static_cast<Qt::AlignmentFlag>(item->textAlignment()));
+
+            // 4. 创建一个垂直布局来容纳名字和图片
+            QVBoxLayout* layout = new QVBoxLayout();
+            layout->setContentsMargins(5, 5, 5, 5);
+            layout->setSpacing(2);
+            layout->addWidget(nameLabel);
+            layout->addWidget(imageLabel);
+
+            // 5. 创建一个容器 Widget，并应用布局
+            QWidget* containerWidget = new QWidget();
+            containerWidget->setLayout(layout);
+
+            // 6. 设置 item 的大小以适应内容，并把容器 Widget 设置进去
+            item->setSizeHint(containerWidget->sizeHint());
+            ui->chatHistoryListWidget->addItem(item);
+            ui->chatHistoryListWidget->setItemWidget(item, containerWidget);
+        }
+        else
+        {
+            // ========================
+            // === 情况二：显示文字 === (你的旧逻辑)
+            // ========================
+            item->setText(senderName + ": " + msg.text);
+            ui->chatHistoryListWidget->addItem(item);
+        }
     }
     ui->chatHistoryListWidget->scrollToBottom();
 }
@@ -363,16 +475,24 @@ void MainWindow::onNewMessageReceived(const ChatMessage &message, const QString&
 {
     qDebug() << "[MainWindow] 收到新消息，对话ID:" << conversationId;
 
+    // 临时：为群聊消息添加前缀，避免与私聊ID冲突
+    QString actualConversationId = conversationId;
+
+    // 检查是否是群聊（通过m_groups）
+    if (m_groups.contains(conversationId)) {
+        actualConversationId = "group_" + conversationId;
+    }
+
     // 使用actualConversationId存储和显示
-    m_chatHistories[conversationId].append(message);
+    m_chatHistories[actualConversationId].append(message);
 
     // 如果当前正在看这个对话，就刷新界面
-    if (conversationId == m_currentConversationId) {
+    if (actualConversationId == m_currentConversationId) {
         updateChatHistoryView();
     } else {
         // 否则，可以在左侧列表项上显示未读标记
-        int currentUnread = m_unreadCounts.value(conversationId, 0);
-        m_unreadCounts[conversationId] = currentUnread + 1;
+        int currentUnread = m_unreadCounts.value(actualConversationId, 0);
+        m_unreadCounts[actualConversationId] = currentUnread + 1;
         // 更新对应的列表项显示
         updateConversationItem(conversationId);
         QApplication::beep();
@@ -483,5 +603,59 @@ void MainWindow::onAddedToNewGroup(const QString& groupName, uint8_t creatorId, 
 
         updateConversationList();
         QMessageBox::information(this, "已被拉入群聊", QString("已被好友%1拉入群聊%2").arg(creatorId).arg(groupName));
+    }
+}
+
+void MainWindow::on_selectImageButton_clicked()
+{
+    if (m_currentConversationId == "-1") {
+        QMessageBox::warning(this, "提示", "请先选择一个聊天！");
+        return;
+    }
+
+    // 1. 打开文件对话框，让用户选择图片
+    QString filePath = QFileDialog::getOpenFileName(this, "选择一张图片", "", "图片文件 (*.png *.jpg *.jpeg *.bmp)");
+
+    // 2. 检查用户是否真的选择了一个文件
+    if (!filePath.isEmpty()) {
+        // 3. 将选择的图片路径保存到我们的成员变量中
+        m_selectedImagePath = filePath;
+
+        // 4. [用户体验优化] 在输入框中给用户一个提示，并设为只读
+        QFileInfo fileInfo(filePath);
+        ui->messageInputTextEdit->setPlainText(QString("[已选择图片: %1]").arg(fileInfo.fileName()));
+        ui->messageInputTextEdit->setReadOnly(true);
+    }
+}
+
+// [新增] 接收并处理图片消息的槽函数
+void MainWindow::onNewImageReceived(uint8_t senderId,
+                                    const QString& conversationId,
+                                    const QByteArray& imageData,
+                                    const QString& fileName)
+{
+    qDebug() << "[MainWindow] 收到新图片，对话ID:" << conversationId << "文件名:" << fileName;
+
+    // 1. 创建一个特殊的文本消息作为占位符
+    QDateTime now = QDateTime::currentDateTime();
+    QString imagePlaceholder = QString("[image:%1]").arg(now.toSecsSinceEpoch());
+    ChatMessage placeholderMsg = { (int)senderId, imagePlaceholder, now };
+
+    // 2. 将占位符消息存入聊天记录
+    m_chatHistories[conversationId].append(placeholderMsg);
+
+    // 3. 将真实的图片数据存入我们的“图片柜子”
+    m_imageHistory.insert(now, imageData);
+
+    // 4. 判断是否需要更新UI
+    if (conversationId == m_currentConversationId) {
+        // 如果当前就在看这个聊天，直接刷新
+        updateChatHistoryView();
+    } else {
+        // 否则，显示未读标记
+        int currentUnread = m_unreadCounts.value(conversationId, 0);
+        m_unreadCounts[conversationId] = currentUnread + 1;
+        updateConversationItem(conversationId);
+        QApplication::beep(); // 提示音
     }
 }

@@ -10,11 +10,13 @@
 #define UI_MAINWINDOW_H
 
 #include <QtCore/QVariant>
+#include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTextEdit>
+#include <QtWidgets/QToolButton>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -45,6 +47,9 @@ public:
     QWidget *verticalLayoutWidget_7;
     QVBoxLayout *verticalLayout_6;
     QPushButton *setNicknameButton;
+    QWidget *verticalLayoutWidget_8;
+    QVBoxLayout *verticalLayout_8;
+    QToolButton *selectImageButton;
 
     void setupUi(QWidget *MainWindow)
     {
@@ -64,7 +69,7 @@ public:
 
         verticalLayoutWidget_2 = new QWidget(MainWindow);
         verticalLayoutWidget_2->setObjectName("verticalLayoutWidget_2");
-        verticalLayoutWidget_2->setGeometry(QRect(10, 390, 171, 51));
+        verticalLayoutWidget_2->setGeometry(QRect(10, 390, 171, 56));
         verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget_2);
         verticalLayout_2->setObjectName("verticalLayout_2");
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
@@ -127,7 +132,7 @@ public:
 
         verticalLayoutWidget_7 = new QWidget(MainWindow);
         verticalLayoutWidget_7->setObjectName("verticalLayoutWidget_7");
-        verticalLayoutWidget_7->setGeometry(QRect(100, 59, 81, 31));
+        verticalLayoutWidget_7->setGeometry(QRect(100, 60, 82, 31));
         verticalLayout_6 = new QVBoxLayout(verticalLayoutWidget_7);
         verticalLayout_6->setObjectName("verticalLayout_6");
         verticalLayout_6->setContentsMargins(0, 0, 0, 0);
@@ -139,6 +144,19 @@ public:
         setNicknameButton->setFont(font1);
 
         verticalLayout_6->addWidget(setNicknameButton);
+
+        verticalLayoutWidget_8 = new QWidget(MainWindow);
+        verticalLayoutWidget_8->setObjectName("verticalLayoutWidget_8");
+        verticalLayoutWidget_8->setGeometry(QRect(520, 430, 26, 24));
+        verticalLayout_8 = new QVBoxLayout(verticalLayoutWidget_8);
+        verticalLayout_8->setObjectName("verticalLayout_8");
+        verticalLayout_8->setContentsMargins(0, 0, 0, 0);
+        selectImageButton = new QToolButton(verticalLayoutWidget_8);
+        selectImageButton->setObjectName("selectImageButton");
+        QIcon icon(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen));
+        selectImageButton->setIcon(icon);
+
+        verticalLayout_8->addWidget(selectImageButton);
 
 
         retranslateUi(MainWindow);
@@ -154,6 +172,7 @@ public:
         sendButton->setText(QCoreApplication::translate("MainWindow", "\345\217\221\351\200\201", nullptr));
         welcomeLabel->setText(QCoreApplication::translate("MainWindow", "\346\254\242\350\277\216\357\274\201\347\224\250\346\210\2670", nullptr));
         setNicknameButton->setText(QCoreApplication::translate("MainWindow", "\346\233\264\346\224\271\346\230\265\347\247\260", nullptr));
+        selectImageButton->setText(QString());
     } // retranslateUi
 
 };
