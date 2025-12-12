@@ -39,3 +39,9 @@
 2614	4101	7872494528521173	server.exe	a7fdf88b4c375439
 8	2537	7872494843277897	CMakeFiles/server.dir/monitor.cpp.obj	8cb357497ac9d312
 2537	4013	7872494868570987	server.exe	a7fdf88b4c375439
+9	2670	7872516124780680	CMakeFiles/server.dir/main.cpp.obj	41cd265b7f09e12f
+18	2674	7872516124876394	CMakeFiles/server.dir/socket.cpp.obj	923887ab2a9d6044
+28	2931	7872516124965488	CMakeFiles/server.dir/handleClient.cpp.obj	86fde43ea04d2c01
+23	3209	7872516124920185	CMakeFiles/server.dir/userControl.cpp.obj	25039a86d1e06cfc
+32	3253	7872516125009585	CMakeFiles/server.dir/monitor.cpp.obj	8cb357497ac9d312
+3253	4797	7872516157224175	server.exe	a7fdf88b4c375439

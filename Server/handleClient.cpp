@@ -273,7 +273,7 @@ static void HandleSetUserName(Packet& receivedPacket, ClientSession* sessionPtr)
     uint8_t userID = receivedPacket.getsendid();
     std::string userName = receivedPacket.getField1Str();
 
-    receivedPacket.setSuccess(SetUserName(userID, userName));
+    receivedPacket.SetUserNameReply(SetUserName(userID, userName));
     SendPacket(sessionPtr->socket_fd, receivedPacket);
 }
 

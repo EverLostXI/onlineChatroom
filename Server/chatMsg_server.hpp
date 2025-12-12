@@ -227,13 +227,34 @@ public:
     }
 
     void AIMsgReply(const std::string& reply) {
+        field1.clear();
+        field2.clear();
+        field3.clear();
+        field4.clear();
+
         writeField2(reply);
         finish();
     }
 
     void CheckUserStatusReply(const std::string& username, bool isonline) {
+        field1.clear();
+        field2.clear();
+        field3.clear();
+        field4.clear();
+
         hdr.success = isonline;
         writeField1(username);
+        finish();
+    }
+    void SetUserNameReply(bool success) {
+        // 清空所有field
+        field1.clear();
+        field2.clear();
+        field3.clear();
+        field4.clear();
+        
+        // 只设置success标志
+        hdr.success = success;
         finish();
     }
     // === 访问器方法 ===
@@ -243,8 +264,6 @@ public:
     bool success() const { return hdr.success; }
     MsgType type() const { return static_cast<MsgType>(hdr.type); }
     
-    /* 设置 success 字段 */
-    void setSuccess(bool value) { hdr.success = value; }
     
     /* 获取序列化后的头部指针 */
     const char* data() const { return reinterpret_cast<const char*>(&hdr); }
