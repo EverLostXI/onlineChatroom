@@ -18,6 +18,7 @@ extern std::mutex g_sessionMutex;
 extern std::mutex g_forwardMsgMutex;
 extern std::mutex g_requestMsgMutex;
 extern std::mutex g_uiLogMutex;
+extern std::map<uint8_t, std::string> g_userName;
 
 // DirectX 11设备
 static ID3D11Device* g_pd3dDevice = nullptr;
@@ -29,6 +30,7 @@ static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
 struct UserUIState {
     uint8_t userID;
     bool isOnline;
+    std::string userName;  // 用户名
     std::string clientIP;
     unsigned short clientPort;
     std::chrono::steady_clock::time_point lastHeartbeat;
@@ -65,7 +67,7 @@ void RunMonitorUI()
     // 创建窗口
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ChatServerMonitor", nullptr };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Server Monitor", WS_OVERLAPPEDWINDOW, 
+    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Server Monitor 1.0", WS_OVERLAPPEDWINDOW, 
                                 100, 100, 1280, 720, nullptr, nullptr, wc.hInstance, nullptr);
 
     // 初始化DirectX 11
@@ -235,6 +237,14 @@ void DrawUserListPanel()
             UserUIState state;
             state.userID = pair.first;
             state.isOnline = (pair.second != nullptr);
+            
+            // 读取用户名（带锁保护）
+            if (g_userName.count(pair.first)) {
+                state.userName = g_userName[pair.first];
+            } else {
+                state.userName = "Unknown";
+            }
+            
             if (state.isOnline) {
                 state.clientIP = pair.second->client_ip;
                 state.clientPort = pair.second->client_port;
@@ -284,8 +294,8 @@ void DrawUserListPanel()
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
         }
         
-        // 简单显示用户ID和状态
-        ImGui::Text("ID: %d [%s]", userID, isOnline ? "在线" : "离线");
+        // 显示用户名和状态
+        ImGui::Text("%s [%s]", user.userName.c_str(), isOnline ? "在线" : "离线");
         
         ImGui::PopStyleColor();
         ImGui::Unindent(5.0f);
@@ -294,6 +304,7 @@ void DrawUserListPanel()
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
+            ImGui::Text("用户名: %s", user.userName.c_str());
             ImGui::Text("用户ID: %d", userID);
             if (isOnline) {
                 ImGui::Text("IP地址: %s", user.clientIP.c_str());

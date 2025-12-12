@@ -86,6 +86,7 @@ bool Signup(uint8_t userID, const std::string &password) {
         } else {
             g_userCredentials[userID] = password;
             g_userSessions[userID] = nullptr;
+            g_userName[userID] = "Anonymous";
             success = true;
         }
     }
@@ -189,21 +190,33 @@ void SendOfflineMessages(uint8_t userID, ClientSession* session) {
              "离线消息推送完成, 共计: " + std::to_string(sentCount) + " 条");
 }
 
-void SetUserName(uint8_t userID, std::string& userName) {
-    bool exists = false;
+bool SetUserName(uint8_t userID, std::string& userName) {
+    bool success = false;
     {
         std::lock_guard<std::mutex> lock(g_sessionMutex);
         // 直接检查 g_userSessions，避免调用 CheckExist 导致重复加锁
         if (g_userSessions.count(userID)) {
             g_userName[userID] = userName;
-            exists = true;
+            
+            success = true;
         }
     }
     
     // 在释放锁后记录日志
-    if (exists) {
+    if (success) {
         WriteLog(LogLevel::PROCESS, "用户" + std::to_string(userID) + "修改用户名为" + userName);
     } else { 
         WriteLog(LogLevel::PROCESS, "用户不存在，无法更改用户名"); 
     }
+
+    return success;
+}
+
+std::string GetUserName(uint8_t userID) {
+    std::lock_guard<std::mutex> lock(g_sessionMutex);
+    // 如果用户名不存在，返回空字符串
+    if (g_userName.count(userID)) {
+        return g_userName[userID];
+    }
+    return "";
 }

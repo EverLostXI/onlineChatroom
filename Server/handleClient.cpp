@@ -14,7 +14,7 @@ extern std::mutex g_sessionMutex;
 // 消息转发辅助函数(判断对面是否存在，是否在线，然后转发消息)
 static void ForwardToUser(Packet& packet, uint8_t senderID, uint8_t receiverID, const std::string& msgType) {
     int userStatus = CheckUser(receiverID);
-    
+
     switch (userStatus) {
         case 0:
             WriteLog(LogLevel::PASS, std::to_string(senderID) + "发送的" + msgType + ", 接收人不存在");
@@ -216,6 +216,89 @@ static void PassGroupMsg(Packet& receivedPacket, ClientSession* sessionPtr) {
     }
 }
 
+static void PassImage(Packet& receivedPacket, ClientSession* sessionPtr) {
+    // 检测本会话是否在线
+    if (!CheckOnline(sessionPtr->userid)) {
+        WriteLog(LogLevel::WARN, "离线用户尝试发送图片消息");
+        return;
+    }
+
+    bool isgroup = receivedPacket.success();
+    uint8_t senderID = receivedPacket.getsendid();
+    if (isgroup) {
+        std::string groupName = receivedPacket.getField3Str();
+
+        std::vector<uint8_t> memberList; // 复制一份减少锁时间
+        {
+            std::lock_guard<std::mutex> lock(g_sessionMutex);
+            // 检查群聊是否存在
+            if (!g_groupChat.count(groupName)) {
+                std::string errorMsg = "群聊不存在: " + groupName + 
+                                    ", 发送者为: " + std::to_string(senderID);
+                WriteLog(LogLevel::PASS, errorMsg);
+                return;
+            }
+            // 获取群成员列表
+            memberList = g_groupChat[groupName];
+        }
+        for (uint8_t memberID : memberList) {
+        // 跳过发送者自己
+            if (memberID == senderID) {
+                continue;
+            }
+            ForwardToUser(receivedPacket, senderID, memberID, "群聊图片");
+        } 
+    } else {
+        uint8_t receiverID = receivedPacket.getrecvid();
+            ForwardToUser(receivedPacket, senderID, receiverID, "私聊图片");
+    }
+}
+
+static void HandleSetUserName(Packet& receivedPacket, ClientSession* sessionPtr) {
+    // 检测本会话是否在线
+    if (!CheckOnline(sessionPtr->userid)) {
+        WriteLog(LogLevel::WARN, "离线用户尝试更改用户名");
+        return;
+    }
+
+    uint8_t userID = receivedPacket.getsendid();
+    std::string userName = receivedPacket.getField1Str();
+
+    receivedPacket.setSuccess(SetUserName(userID, userName));
+    SendPacket(sessionPtr->socket_fd, receivedPacket);
+}
+
+static void HandleCheckStatus(Packet& receivedPacket, ClientSession* sessionPtr) {
+        // 检测本会话是否在线
+    if (!CheckOnline(sessionPtr->userid)) {
+        WriteLog(LogLevel::WARN, "离线用户尝试更改查询用户状态");
+        return;
+    }
+
+    uint8_t userID = receivedPacket.getsendid();
+    uint8_t targetID = receivedPacket.getrecvid();
+
+    bool isOnline = false;
+    std::string targetName = "";
+    switch (CheckUser(targetID)) {
+        case 0: {
+            WriteLog(LogLevel::PROCESS, "查询的用户不存在");
+            return;
+        }
+        case 1: {
+            targetName = GetUserName(targetID);
+            break;
+        }
+        case 2: {
+            targetName = GetUserName(targetID);
+            isOnline = true;
+            break;
+        }
+    }
+    receivedPacket.CheckUserStatusReply(targetName, isOnline);
+    SendPacket(sessionPtr->socket_fd, receivedPacket);
+}
+
 // 工作线程入口函数：为每个客户端分配独立线程处理消息
 void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPtr)作为一个客户端在内存中的唯一代表
     SOCKET clientSocket = sessionPtr->socket_fd;
@@ -261,12 +344,18 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
         
         // 有数据可读，接收数据包
         Packet receivedPacket; // 创建数据包对象
-        
+
         if (!RecvPacket(sessionPtr->socket_fd, receivedPacket)) {
             // 连接断开或接收失败
             WriteLog(LogLevel::CONNECTION, "客户端断开连接: " + clientInfo);
             break;
         }
+
+        // // 临时调试日志 - 接收数据后再打印
+        // char typeBuf[8];
+        // sprintf(typeBuf, "0x%02X", static_cast<uint8_t>(receivedPacket.type()));
+        // WriteLog(LogLevel::PROCESS, "收到消息类型值: " + std::string(typeBuf) + 
+        //  " (十进制: " + std::to_string(static_cast<int>(receivedPacket.type())) + ")");
         
         // 根据消息类型分别处理
         switch (receivedPacket.type()) {
@@ -315,6 +404,22 @@ void HandleClient(ClientSession* sessionPtr) { // 这个会话指针（sessionPt
             // 转发群聊消息
             case MsgType::GroupMsg: {
                 PassGroupMsg(receivedPacket, sessionPtr);
+                break;
+            }
+
+            // 转发图片
+            case MsgType::ImageMsg: {
+                PassImage(receivedPacket, sessionPtr);
+                break;
+            }
+
+            case MsgType::SetName: {
+                HandleSetUserName(receivedPacket, sessionPtr);
+                break;
+            }
+
+            case MsgType::CheckUser: {
+                HandleCheckStatus(receivedPacket, sessionPtr);
                 break;
             }
             

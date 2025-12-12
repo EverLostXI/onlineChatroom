@@ -27,7 +27,10 @@ enum class MsgType : uint8_t
     AddFriendRe  = 0x08,  // 添加好友反馈
     Heartbeat    = 0x09,  // 心跳包
     NormalMsg    = 0x10,   // 普通消息
-    GroupMsg     = 0x11    // 群聊消息
+    GroupMsg     = 0x11,    // 群聊消息
+    ImageMsg     = 0x12, // 图片消息
+    SetName      = 0x13,  // 设置用户名
+    CheckUser    = 0x14 // 查询用户状态
 };
 
 #pragma pack(push,1)
@@ -206,12 +209,37 @@ public:
         return p;
     }
 
+    static Packet SetUserName(uint8_t senderId, const std::string& username) {
+        Packet p(MsgType::SetName);
+        p.hdr.sendid = senderId;
+
+        p.writeField1(username);
+        p.finish();
+        return p;
+    }
+
+    static Packet CheckUserStatus(uint8_t senderId, uint8_t targetId) {
+        Packet p(MsgType::CheckUser);
+        p.hdr.sendid = senderId;
+        p.hdr.recvid = targetId;
+        p.finish();
+        return p;
+    }
+
+    void CheckUserStatusReply(const std::string& username, bool isonline) {
+        hdr.success = isonline;
+        writeField1(username);
+        finish();
+    }
     // === 访问器方法 ===
     
     uint8_t getsendid() const { return hdr.sendid; }
     uint8_t getrecvid() const { return hdr.recvid; }
     bool success() const { return hdr.success; }
     MsgType type() const { return static_cast<MsgType>(hdr.type); }
+    
+    /* 设置 success 字段 */
+    void setSuccess(bool value) { hdr.success = value; }
     
     /* 获取序列化后的头部指针 */
     const char* data() const { return reinterpret_cast<const char*>(&hdr); }

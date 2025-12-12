@@ -29,6 +29,7 @@ extern std::map<uint8_t, std::string> g_userCredentials;       // 用户凭证(I
 extern std::map<uint8_t, ClientSession*> g_userSessions;       // 用户会话(ID->会话指针)
 extern std::map<uint8_t, std::vector<Packet>> g_offlineMessages; // 离线消息队列
 extern std::map<std::string, std::vector<uint8_t>> g_groupChat;  // 群聊(群名->成员列表)
+extern std::map<uint8_t, std::string> g_userName;              // 用户名(ID->用户名)
 extern std::mutex g_sessionMutex;  // 保护用户会话数据的互斥锁
 
 // 用户检查函数
@@ -47,4 +48,9 @@ bool CreateGroup(std::string& groupName, std::vector<uint8_t>& memberList); // �
 // 离线消息函数
 void SaveOfflineMessages(uint8_t userID, Packet message);  // 保存离线消息
 void SendOfflineMessages(uint8_t userID, ClientSession* session); // 发送离线消息
-void SetUserName(uint8_t userID, std::string& userName);
+
+// 用户名函数
+std::string GetUserName(uint8_t userID);  // 查询用户名
+
+// 用户名管理函数
+bool SetUserName(uint8_t userID, std::string& userName);  // 设置用户名
