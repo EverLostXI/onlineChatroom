@@ -63,6 +63,10 @@ template <> constexpr inline auto NetworkManager::qt_create_metaobjectdata<qt_me
         "creatorId",
         "QList<uint8_t>",
         "memberIds",
+        "newImageReceived",
+        "senderId",
+        "imageData",
+        "fileName",
         "onRegistrationRequested",
         "username",
         "password",
@@ -108,20 +112,24 @@ template <> constexpr inline auto NetworkManager::qt_create_metaobjectdata<qt_me
         QtMocHelpers::SignalData<void(const QString &, uint8_t, const QVector<uint8_t> &)>(19, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 20 }, { 0x80000000 | 11, 21 }, { 0x80000000 | 22, 23 },
         }}),
+        // Signal 'newImageReceived'
+        QtMocHelpers::SignalData<void(uint8_t, const QString &, const QByteArray &, const QString &)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 11, 25 }, { QMetaType::QString, 17 }, { QMetaType::QByteArray, 26 }, { QMetaType::QString, 27 },
+        }}),
         // Slot 'onRegistrationRequested'
-        QtMocHelpers::SlotData<void(const QString &, const QString &)>(24, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { QMetaType::QString, 25 }, { QMetaType::QString, 26 },
+        QtMocHelpers::SlotData<void(const QString &, const QString &)>(28, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 29 }, { QMetaType::QString, 30 },
         }}),
         // Slot 'onConnected'
-        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onDisconnected'
-        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onReadyRead'
-        QtMocHelpers::SlotData<void()>(29, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onRequestTimeout'
-        QtMocHelpers::SlotData<void()>(30, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onSendHeartbeat'
         QtMocHelpers::SlotData<void()>(31, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onDisconnected'
+        QtMocHelpers::SlotData<void()>(32, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onReadyRead'
+        QtMocHelpers::SlotData<void()>(33, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onRequestTimeout'
+        QtMocHelpers::SlotData<void()>(34, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onSendHeartbeat'
+        QtMocHelpers::SlotData<void()>(35, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -156,12 +164,13 @@ void NetworkManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         case 8: _t->newMessageReceived((*reinterpret_cast<std::add_pointer_t<ChatMessage>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 9: _t->createGroupResult((*reinterpret_cast<std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
         case 10: _t->addedToNewGroup((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QList<uint8_t>>>(_a[3]))); break;
-        case 11: _t->onRegistrationRequested((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
-        case 12: _t->onConnected(); break;
-        case 13: _t->onDisconnected(); break;
-        case 14: _t->onReadyRead(); break;
-        case 15: _t->onRequestTimeout(); break;
-        case 16: _t->onSendHeartbeat(); break;
+        case 11: _t->newImageReceived((*reinterpret_cast<std::add_pointer_t<uint8_t>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<QByteArray>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[4]))); break;
+        case 12: _t->onRegistrationRequested((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<QString>>(_a[2]))); break;
+        case 13: _t->onConnected(); break;
+        case 14: _t->onDisconnected(); break;
+        case 15: _t->onReadyRead(); break;
+        case 16: _t->onRequestTimeout(); break;
+        case 17: _t->onSendHeartbeat(); break;
         default: ;
         }
     }
@@ -188,6 +197,8 @@ void NetworkManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
             return;
         if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(const QString & , uint8_t , const QVector<uint8_t> & )>(_a, &NetworkManager::addedToNewGroup, 10))
             return;
+        if (QtMocHelpers::indexOfMethod<void (NetworkManager::*)(uint8_t , const QString & , const QByteArray & , const QString & )>(_a, &NetworkManager::newImageReceived, 11))
+            return;
     }
 }
 
@@ -210,14 +221,14 @@ int NetworkManager::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 17)
+        if (_id < 18)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 17;
+        _id -= 18;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 17)
+        if (_id < 18)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 17;
+        _id -= 18;
     }
     return _id;
 }
@@ -286,5 +297,11 @@ void NetworkManager::createGroupResult(bool _t1, const QString & _t2)
 void NetworkManager::addedToNewGroup(const QString & _t1, uint8_t _t2, const QVector<uint8_t> & _t3)
 {
     QMetaObject::activate<void>(this, &staticMetaObject, 10, nullptr, _t1, _t2, _t3);
+}
+
+// SIGNAL 11
+void NetworkManager::newImageReceived(uint8_t _t1, const QString & _t2, const QByteArray & _t3, const QString & _t4)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 11, nullptr, _t1, _t2, _t3, _t4);
 }
 QT_WARNING_POP

@@ -11,6 +11,11 @@
 #include "addfrienddialog.h"    // 包含头文件
 #include "creategroupdialog.h"  // 包含头文件
 
+#include <QMap>        // [新增]
+#include <QByteArray>  // [新增]
+#include <QFileDialog> // [新增]
+#include <QFileInfo>   // [新增]
+
 // [新增] 定义一个结构体来存储群聊的完整信息
 struct GroupInfo {
     QString groupName;
@@ -50,6 +55,15 @@ private slots:
     // [新增] 响应 NetworkManager 信号的槽函数
     void onCreateGroupResult(bool success, const QString& message);
     void onAddedToNewGroup(const QString& groupName, uint8_t creatorId, const QVector<uint8_t>& memberIds);
+    void on_selectImageButton_clicked(); // [新增]
+    // [新增] 响应 NetworkManager 图片信号的槽函数
+    void onNewImageReceived(uint8_t senderId,
+                            const QString& conversationId,
+                            const QByteArray& imageData,
+                            const QString& fileName);
+
+    void onSetNicknameResult(bool success);
+    void onCheckUserStatusResult(uint8_t userId, const QString& nickname, bool isOnline);
 
 private:
     Ui::MainWindow *ui;
@@ -74,6 +88,13 @@ private:
     QString m_pendingGroupName;
     // [新增] 用于暂存正在创建的群聊的成员列表
     QVector<uint8_t> m_pendingGroupMembers;
+    // [新增] 用于图片发送功能
+    QString m_selectedImagePath;
+
+    // [新增] 用于存储聊天记录中的图片数据
+    // Key:   消息的时间戳 (作为唯一标识)
+    // Value: 图片的二进制数据
+    QMap<QDateTime, QByteArray> m_imageHistory;
     void updateChatHistoryView(); // 专门负责刷新右侧聊天记录的函数
 
     void updateConversationItem(const QString& conversationId);

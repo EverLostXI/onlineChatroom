@@ -27,9 +27,17 @@ void RegisterDialog::on_registerButton_clicked()
         return;
     }
 
-    bool isNumeric;
-    uint8_t userId = username.toUShort(&isNumeric); // toUShort可以安全地转为uint8_t
-    if (!isNumeric) {
+    bool ok;
+    uint8_t userId = username.toUShort(&ok); // toUShort可以安全地转为uint8_t
+
+    if (!ok) {
+        QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
+        return;
+    }
+
+    int num = username.toInt(&ok);
+    ok = ok && (num>=0&&num<=255);
+    if (!ok) {
         QMessageBox::warning(this, "输入错误", "用户名必须是0-255之间的数字ID！");
         return;
     }

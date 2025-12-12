@@ -104,9 +104,9 @@ void NetworkManager::onConnected()
 {
     qDebug() << "Successfully connected to server.";
     emit connected(); // 发出连接成功信号
-    // === 新增代码：连接成功后，启动15秒心跳定时器 ===
-    // start() 的参数是毫秒，15000毫秒 = 15秒
-    m_heartbeatTimer->start(15000);
+    // === 新增代码：连接成功后，启动5秒心跳定时器 ===
+    // start() 的参数是毫秒，5000毫秒 = 5秒
+    m_heartbeatTimer->start(5000);
     qDebug() << "Heartbeat timer started (15 seconds interval).";
 }
 
@@ -242,6 +242,7 @@ void NetworkManager::onReadyRead()
             case MsgType::GroupMsg:
             {
                 uint8_t senderId = receivedPacket.getsendid();
+                uint8_t recvId = receivedPacket.getrecvid();  // 添加这行
                 QString content = QString::fromStdString(receivedPacket.getField1Str());
                 QString groupId = QString::fromStdString(receivedPacket.getField2Str()); // 从 field2 获取群ID
 
@@ -285,6 +286,79 @@ void NetworkManager::onReadyRead()
 
                 // [修改] 发射带有成员列表的信号
                 emit addedToNewGroup(groupName, creatorId, memberIds);
+                break;
+            }
+
+                // [新增] 处理图片消息
+            case MsgType::ImageMsg:
+            {
+                qDebug() << "收到 ImageMsg (图片消息)";
+
+                // 1. 【先定义所有变量】
+                //    将所有需要用到的数据从包里解析出来，并定义好变量
+                uint8_t senderId = receivedPacket.getsendid();
+
+                const std::vector<uint8_t>& imageDataVec = receivedPacket.getField1();
+                QByteArray imageData = QByteArray(
+                    reinterpret_cast<const char*>(imageDataVec.data()),
+                    imageDataVec.size()
+                    );
+                QString imageName = QString::fromStdString(receivedPacket.getField2Str());
+
+                QString conversationId; // 声明 conversationId
+
+                // 2. 【再进行逻辑判断】
+                //    根据 success() 的值来给 conversationId 赋值
+                if (receivedPacket.success()) { // isGroup == true
+                    // 是群聊，从 field3 获取群ID
+                    conversationId = QString::fromStdString(receivedPacket.getField3Str());
+                    qDebug() << "图片来自群聊:" << conversationId;
+                } else { // isGroup == false
+                    // 是私聊，对话ID就是发送者的ID
+                    conversationId = QString::number(senderId);
+                    qDebug() << "图片来自私聊，发送者:" << senderId;
+                }
+
+                // 3. 【最后发射信号】
+                //    此时，senderId, conversationId, imageData, imageName 都已经有值了
+                emit newImageReceived(senderId, conversationId, imageData, imageName);
+
+                break; // 不要忘记 break
+            }
+
+            // 处理设置昵称的响应
+            case MsgType::SetName:
+            {
+                uint8_t targetId = receivedPacket.getrecvid(); // 被设置的用户ID
+
+                // 检查这个响应是否是给当前用户的
+                if (targetId == selfId()) {
+                    bool success = receivedPacket.success();
+                    qDebug() << "收到设置用户名响应，目标用户ID:" << targetId
+                             << "结果:" << (success ? "成功" : "失败");
+
+                    emit setNicknameResult(success);
+                }
+                break;
+            }
+
+            // 处理查询用户状态的响应
+            case MsgType::CheckUser:
+            {
+                uint8_t targetId = receivedPacket.getrecvid(); // 被查询的用户ID
+                uint8_t senderId = receivedPacket.getsendid(); // 查询请求的发起者
+
+                // 检查这个响应是否是给当前用户的
+                if (senderId == selfId()) {
+                    bool isOnline = receivedPacket.success();
+                    QString nickname = QString::fromStdString(receivedPacket.getField1Str());
+
+                    qDebug() << "收到查询用户状态响应，被查询用户ID:" << targetId
+                             << "昵称:" << nickname
+                             << "在线状态:" << (isOnline ? "在线" : "离线");
+
+                    emit checkUserStatusResult(targetId, nickname, isOnline);
+                }
                 break;
             }
 
@@ -432,3 +506,67 @@ void NetworkManager::onSendHeartbeat()
         qDebug() << "Socket disconnected, stopping heartbeat timer.";
     }
 }
+
+// [新增] 图片消息发送函数的实现
+void NetworkManager::sendImageMessage(uint8_t selfId,
+                                      const std::string& targetId,
+                                      bool isGroup,
+                                      const std::vector<uint8_t>& imageData,
+                                      const std::string& imageName)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "无法发送图片消息：未连接到服务器。";
+        // 可以在这里发射一个失败信号通知UI
+        return;
+    }
+
+    // 调用我们早已准备好的 Packet::makeImageMessage 封包函数
+    Packet p = Packet::makeImageMessage(selfId, targetId, isGroup, imageData, imageName);
+
+    qDebug() << "正在发送 ImageMsg 从" << selfId << "到" << QString::fromStdString(targetId);
+    qDebug() << "--- Before sendTo ---";
+    qDebug() << "field1 (imageData) size:" << p.getField1().size();
+    qDebug() << "field2 (imageName) size:" << p.getField2().size();
+    qDebug() << "Calculated total packet size:" << p.size();
+
+    p.sendTo(m_socket);
+}
+
+// 发送设置昵称请求
+void NetworkManager::sendSetNicknameRequest(const QString& nickname)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "无法发送设置昵称请求：未连接到服务器";
+        emit setNicknameResult(false);
+        return;
+    }
+
+    uint8_t currentUserId = selfId();
+    Packet p = Packet::SetUserName(currentUserId, nickname.toStdString());
+
+    if (p.sendTo(m_socket)) {
+        qDebug() << "已发送设置昵称请求，用户ID:" << currentUserId
+                 << "昵称:" << nickname;
+        m_requestTimer->start(10000); // 10秒超时
+    } else {
+        emit setNicknameResult(false);
+    }
+}
+
+// 发送查询用户状态请求
+void NetworkManager::sendCheckUserStatusRequest(uint8_t targetId)
+{
+    if (m_socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "无法发送查询用户状态请求：未连接到服务器";
+        return;
+    }
+
+    uint8_t currentUserId = selfId();
+    Packet p = Packet::CheckUserStatus(currentUserId, targetId);
+
+    if (p.sendTo(m_socket)) {
+        qDebug() << "已发送查询用户状态请求，目标用户ID:" << targetId;
+        m_requestTimer->start(10000);
+    }
+}
+
