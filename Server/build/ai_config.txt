@@ -1,0 +1,16 @@
+# AI服务配置文件
+
+# OpenAI API密钥 (必填)
+API_KEY=sk-6019904bd41a4847b346e5ee58172b78
+
+# API端点 (默认为OpenAI)
+API_ENDPOINT=https://api.deepseek.com/v1/chat/completions
+
+# 使用的模型
+MODEL=deepseek-chat
+
+# 最大token数 (默认500)
+MAX_TOKENS=500
+
+# 温度参数 0.0-1.0 (默认0.7)
+TEMPERATURE=0.7

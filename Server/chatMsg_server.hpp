@@ -30,7 +30,7 @@ enum class MsgType : uint8_t
     GroupMsg     = 0x11,    // 群聊消息
     ImageMsg     = 0x12, // 图片消息
     SetName      = 0x13,  // 设置用户名
-    CheckUser    = 0x14 // 查询用户状态
+    CheckUser    = 0x14, // 查询用户状态
 };
 
 #pragma pack(push,1)
@@ -224,6 +224,11 @@ public:
         p.hdr.recvid = targetId;
         p.finish();
         return p;
+    }
+
+    void AIMsgReply(const std::string& reply) {
+        writeField2(reply);
+        finish();
     }
 
     void CheckUserStatusReply(const std::string& username, bool isonline) {

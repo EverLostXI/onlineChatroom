@@ -2,6 +2,7 @@
 #include "headers/socket.h"
 #include "headers/logger.h"
 #include "headers/userControl.h"
+#include "headers/aiService.h"
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -10,6 +11,9 @@
 // 全局心跳超时时间（在main中定义）
 extern const int HEARTBEAT_TIMEOUT;
 extern std::mutex g_sessionMutex;
+
+// 函数前置声明
+static void ReplyAIMsg(Packet& receivedPacket, ClientSession* sessionPtr);
 
 // 消息转发辅助函数(判断对面是否存在，是否在线，然后转发消息)
 static void ForwardToUser(Packet& packet, uint8_t senderID, uint8_t receiverID, const std::string& msgType) {
@@ -140,8 +144,13 @@ static void PassCommonMessage(Packet& receivedPacket, ClientSession* sessionPtr)
     uint8_t senderID = receivedPacket.getsendid();
     uint8_t receiverID = receivedPacket.getrecvid();
 
-    // 转发消息给接收者
-    ForwardToUser(receivedPacket, senderID, receiverID, "私聊消息");
+    // 判断是不是ai消息
+    if (receiverID == 254) {
+        ReplyAIMsg(receivedPacket, sessionPtr);
+    } else {
+        // 转发消息给接收者
+        ForwardToUser(receivedPacket, senderID, receiverID, "私聊消息");
+    }
 }
 
 static void HandleCreateGroup(Packet& receivedPacket, ClientSession* sessionPtr) {
@@ -297,6 +306,25 @@ static void HandleCheckStatus(Packet& receivedPacket, ClientSession* sessionPtr)
     }
     receivedPacket.CheckUserStatusReply(targetName, isOnline);
     SendPacket(sessionPtr->socket_fd, receivedPacket);
+}
+
+static void ReplyAIMsg(Packet& receivedPacket, ClientSession* sessionPtr) {
+    uint8_t senderID = receivedPacket.getsendid();
+    std::string message = receivedPacket.getField1Str();
+    
+    WriteLog(LogLevel::PROCESS, "收到AI消息请求 - 用户: " + std::to_string(senderID));
+    
+    std::string aiReply = g_aiService.GetAIResponse(message);
+    
+
+    Packet replyPacket = Packet::Message(254, senderID, aiReply);
+    
+    // 发送回复
+    if (!SendPacket(sessionPtr->socket_fd, replyPacket)) {
+        WriteLog(LogLevel::WARN, "发送AI回复失败 - 用户: " + std::to_string(senderID));
+    } else {
+        WriteLog(LogLevel::PASS, "AI回复已发送 - 用户: " + std::to_string(senderID));
+    }
 }
 
 // 工作线程入口函数：为每个客户端分配独立线程处理消息

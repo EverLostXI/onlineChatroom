@@ -13,6 +13,7 @@
 #include "headers/userControl.h"
 #include "headers/handleClient.h"
 #include "headers/Monitor.h"
+#include "headers/aiService.h"
 
 // TODO: 添加监视窗口，包含用户列表，群聊列表，在线客户端列表，usersession跟踪，手动控制map绑定
 
@@ -31,6 +32,9 @@ int main() {
     InitializeLogFile();
 
     WriteLog(LogLevel::INFO, "监视窗口已启动");
+    
+    // 初始化AI服务
+    InitializeAIService();
 
     // 初始化WinSock
     if (!InitializeWinSock()) {

@@ -3,6 +3,7 @@
 #include "headers/socket.h"
 #include <cstdint>
 #include <mutex>
+#include <algorithm>
 #include <chrono>
 
 // 全局变量定义
@@ -125,6 +126,83 @@ void LogOff(uint8_t userID) {
         delete g_userSessions[userID];
         g_userSessions[userID] = nullptr;
     }
+}
+
+// 强制用户下线并断开连接
+void ForceDisconnect(uint8_t userID) {
+    ClientSession* session = nullptr;
+    SOCKET clientSocket = INVALID_SOCKET;
+    
+    // 获取session并关闭socket（在锁外执行IO操作）
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        if (g_userSessions.count(userID) && g_userSessions[userID] != nullptr) {
+            session = g_userSessions[userID];
+            clientSocket = session->socket_fd;
+        }
+    }
+    
+    // 关闭socket连接（不持锁）
+    if (clientSocket != INVALID_SOCKET) {
+        shutdown(clientSocket, SD_BOTH);
+        closesocket(clientSocket);
+    }
+    
+    // 清理session
+    if (session) {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        // 再次检查，防止期间被其他线程删除
+        if (g_userSessions.count(userID) && g_userSessions[userID] == session) {
+            delete g_userSessions[userID];
+            g_userSessions[userID] = nullptr;
+            WriteLog(LogLevel::CONNECTION, "强制下线用户: " + std::to_string(userID));
+        }
+    }
+}
+
+// 彻底删除用户（包括账号、数据、连接）
+void DeleteUser(uint8_t userID) {
+    // 1. 先强制下线（如果在线）
+    ForceDisconnect(userID);
+    
+    // 2. 删除所有用户数据（持锁操作）
+    {
+        std::lock_guard<std::mutex> lock(g_sessionMutex);
+        
+        // 删除账号密码
+        if (g_userCredentials.count(userID)) {
+            g_userCredentials.erase(userID);
+        }
+        
+        // 删除用户名
+        if (g_userName.count(userID)) {
+            g_userName.erase(userID);
+        }
+        
+        // 删除离线消息
+        if (g_offlineMessages.count(userID)) {
+            g_offlineMessages.erase(userID);
+        }
+        
+        // 从所有群聊中移除该用户
+        for (auto& group : g_groupChat) {
+            auto& memberList = group.second;
+            memberList.erase(
+                std::remove(memberList.begin(), memberList.end(), userID),
+                memberList.end()
+            );
+        }
+        
+        // 确保session已清理
+        if (g_userSessions.count(userID)) {
+            if (g_userSessions[userID] != nullptr) {
+                delete g_userSessions[userID];
+            }
+            g_userSessions.erase(userID);
+        }
+    }
+    
+    WriteLog(LogLevel::INFO, "已彻底删除用户: " + std::to_string(userID));
 }
 
 // 创建群聊函数

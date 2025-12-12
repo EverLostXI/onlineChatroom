@@ -4,6 +4,14 @@ project(Chat LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 使用build目录中的curl库
+set(CURL_INCLUDE_DIR "${CMAKE_BINARY_DIR}/curl/include")
+set(CURL_LIBRARY "${CMAKE_BINARY_DIR}/curl/lib/libcurl.dll.a")
+
+# 查找CURL库（AI功能必需）
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+
 set(IMGUI_SOURCES
     imgui/imgui.cpp
     imgui/imgui_draw.cpp
@@ -23,6 +31,7 @@ add_executable(server
     userControl.cpp
     handleClient.cpp
     monitor.cpp
+    aiService.cpp
     ${IMGUI_SOURCES}
 )
 
@@ -39,5 +48,6 @@ target_link_libraries(server
     d3dcompiler  # DirectX 编译器
     dxgi         # DirectX 图形接口
     dwmapi       # Desktop Window Manager API
-    imm32       # Input Method Manager
+    imm32        # Input Method Manager
+    ${CURL_LIBRARIES}  # CURL库（AI功能必需）
 )

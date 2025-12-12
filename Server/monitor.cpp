@@ -53,6 +53,9 @@ void CleanupRenderTarget();
 // UI状态变量
 static int g_selectedUserId = -1;  // 被选中的用户ID（用于显示详细信息）
 static auto g_lastHeartbeatTime = std::chrono::steady_clock::now();
+static bool g_showDeleteConfirm = false;  // 是否显示删除确认对话框
+static uint8_t g_deleteTargetID = 0;  // 待删除的用户ID
+static std::string g_deleteTargetName = "";  // 待删除的用户名
 
 // 绘制各个监视框
 void DrawUserListPanel();
@@ -60,6 +63,7 @@ void DrawGroupListPanel();
 void DrawServerLogPanel();
 void DrawForwardMessagesPanel();
 void DrawRequestMessagesPanel();
+void DrawDeleteConfirmDialog();
 
 // UI主函数
 void RunMonitorUI()
@@ -201,6 +205,9 @@ void RunMonitorUI()
 
         ImGui::End();
 
+        // 绘制确认对话框（在主窗口之后）
+        DrawDeleteConfirmDialog();
+
         // 渲染
         ImGui::Render();
         const float clear_color[4] = { 0.02f, 0.02f, 0.02f, 1.0f };
@@ -320,6 +327,65 @@ void DrawUserListPanel()
         {
             g_selectedUserId = userID;
         }
+        
+        // 右键菜单
+        if (ImGui::BeginPopupContextItem(("UserMenu_" + std::to_string(userID)).c_str()))
+        {
+            ImGui::Text("用户 %s (ID: %d)", user.userName.c_str(), userID);
+            ImGui::Separator();
+            
+            if (isOnline && ImGui::MenuItem("强制下线"))
+            {
+                ForceDisconnect(userID);
+                ImGui::CloseCurrentPopup();
+            }
+            
+            if (ImGui::MenuItem("删除账户"))
+            {
+                g_showDeleteConfirm = true;
+                g_deleteTargetID = userID;
+                g_deleteTargetName = user.userName;
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+}
+
+// 删除确认对话框渲染（需要在主UI循环中调用）
+void DrawDeleteConfirmDialog()
+{
+    if (g_showDeleteConfirm)
+    {
+        ImGui::OpenPopup("删除确认");
+        g_showDeleteConfirm = false;  // 只打开一次
+    }
+    
+    if (ImGui::BeginPopupModal("删除确认", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("确定要删除用户 '%s' (ID: %d) 吗？", g_deleteTargetName.c_str(), g_deleteTargetID);
+        ImGui::Text("此操作将:");
+        ImGui::BulletText("强制用户下线");
+        ImGui::BulletText("删除用户账户和密码");
+        ImGui::BulletText("删除所有离线消息");
+        ImGui::BulletText("从所有群聊中移除");
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "此操作不可恢复！");
+        ImGui::Separator();
+        
+        if (ImGui::Button("确定删除", ImVec2(120, 0)))
+        {
+            DeleteUser(g_deleteTargetID);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("取消", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::EndPopup();
     }
 }
 

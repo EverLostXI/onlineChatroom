@@ -41,6 +41,8 @@ int CheckUser(uint8_t userID);     // 综合检查(0=不存在, 1=离线, 2=在�
 bool Signup(uint8_t userID, const std::string& password);  // 注册账户
 bool LoginConnect(uint8_t userID, const std::string& password, ClientSession* session); // 登录
 void LogOff(uint8_t userID);  // 下线
+void ForceDisconnect(uint8_t userID);  // 强制用户下线并断开连接
+void DeleteUser(uint8_t userID);  // 彻底删除用户（包括账号、数据、连接）
 
 // 群聊管理函数
 bool CreateGroup(std::string& groupName, std::vector<uint8_t>& memberList); // 创建群聊
