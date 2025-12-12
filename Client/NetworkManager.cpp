@@ -328,10 +328,16 @@ void NetworkManager::onReadyRead()
             // 处理设置昵称的响应
             case MsgType::SetName:
             {
-                bool success = receivedPacket.success();
-                qDebug() << "收到设置昵称响应，结果:" << (success ? "成功" : "失败");
+                uint8_t targetId = receivedPacket.getrecvid(); // 被设置的用户ID
 
-                emit setNicknameResult(success);
+                // 检查这个响应是否是给当前用户的
+                if (targetId == selfId()) {
+                    bool success = receivedPacket.success();
+                    qDebug() << "收到设置用户名响应，目标用户ID:" << targetId
+                             << "结果:" << (success ? "成功" : "失败");
+
+                    emit setNicknameResult(success);
+                }
                 break;
             }
 
@@ -339,14 +345,19 @@ void NetworkManager::onReadyRead()
             case MsgType::CheckUser:
             {
                 uint8_t targetId = receivedPacket.getrecvid(); // 被查询的用户ID
-                bool isOnline = receivedPacket.success();       // 是否在线
-                QString nickname = QString::fromStdString(receivedPacket.getField1Str()); // 昵称
+                uint8_t senderId = receivedPacket.getsendid(); // 查询请求的发起者
 
-                qDebug() << "收到查询用户状态响应，用户ID:" << targetId
-                         << "昵称:" << nickname
-                         << "在线状态:" << (isOnline ? "在线" : "离线");
+                // 检查这个响应是否是给当前用户的
+                if (senderId == selfId()) {
+                    bool isOnline = receivedPacket.success();
+                    QString nickname = QString::fromStdString(receivedPacket.getField1Str());
 
-                emit checkUserStatusResult(targetId, nickname, isOnline);
+                    qDebug() << "收到查询用户状态响应，被查询用户ID:" << targetId
+                             << "昵称:" << nickname
+                             << "在线状态:" << (isOnline ? "在线" : "离线");
+
+                    emit checkUserStatusResult(targetId, nickname, isOnline);
+                }
                 break;
             }
 
