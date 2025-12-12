@@ -62,6 +62,9 @@ private slots:
                             const QByteArray& imageData,
                             const QString& fileName);
 
+    void onSetNicknameResult(bool success);
+    void onCheckUserStatusResult(uint8_t userId, const QString& nickname, bool isOnline);
+
 private:
     Ui::MainWindow *ui;
     // ...

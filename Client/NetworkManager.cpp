@@ -242,6 +242,7 @@ void NetworkManager::onReadyRead()
             case MsgType::GroupMsg:
             {
                 uint8_t senderId = receivedPacket.getsendid();
+                uint8_t recvId = receivedPacket.getrecvid();  // 添加这行
                 QString content = QString::fromStdString(receivedPacket.getField1Str());
                 QString groupId = QString::fromStdString(receivedPacket.getField2Str()); // 从 field2 获取群ID
 

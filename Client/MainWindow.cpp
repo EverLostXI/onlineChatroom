@@ -32,6 +32,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&NetworkManager::instance(), &NetworkManager::newMessageReceived, this, &MainWindow::onNewMessageReceived);
     // [新增] 连接接收图片的信号
     connect(&NetworkManager::instance(), &NetworkManager::newImageReceived, this, &MainWindow::onNewImageReceived);
+
+
+    connect(&NetworkManager::instance(), &NetworkManager::setNicknameResult,
+            this, &MainWindow::onSetNicknameResult);
+    connect(&NetworkManager::instance(), &NetworkManager::checkUserStatusResult,
+            this, &MainWindow::onCheckUserStatusResult);
+
     // --- 添加初始的假数据 ---////////////////////////
     /////////////////////////////////////////////////
     m_friends[123] = "张三";
@@ -157,6 +164,86 @@ void MainWindow::onNicknameChanged(const QString& newNickname)
 
     // 这里还可以添加其他逻辑，比如更新聊天中显示的"我"的名字
     // 或者通知服务器昵称更改等
+    // 发送设置昵称请求给服务器
+    NetworkManager::instance().sendSetNicknameRequest(newNickname);
+
+    // 注意：不在UI中立即更新，等待服务器确认
+    QMessageBox::information(this, "提示", "昵称设置请求已发送，请等待服务器确认...");
+}
+
+void MainWindow::onSetNicknameResult(bool success)
+{
+    if (success) {
+        QMessageBox::information(this, "成功", "昵称设置成功！");
+
+        // 重新查询自己的用户状态，获取新昵称
+        //uint8_t selfId = NetworkManager::instance().selfId();
+        //NetworkManager::instance().sendCheckUserStatusRequest(selfId);
+    } else {
+        QMessageBox::warning(this, "失败", "昵称设置失败，可能昵称已存在或网络问题");
+    }
+}
+
+// ================ 好友状态查询 ================
+
+void MainWindow::on_conversationListWidget_itemClicked(QListWidgetItem *item)
+{
+    if (!item) return;
+
+    QString conversationId = item->data(Qt::UserRole).toString();
+
+    // 1. 清除未读计数
+    if (m_unreadCounts.contains(conversationId) && m_unreadCounts[conversationId] > 0) {
+        m_unreadCounts.remove(conversationId);
+        updateConversationItem(conversationId);
+    }
+
+    // 2. 切换到对话
+    m_currentConversationId = conversationId;
+    qDebug() << "切换到对话:" << m_currentConversationId;
+    updateChatHistoryView();
+
+    // 3. 如果是好友，查询用户状态
+    // 判断：如果是数字（私聊），并且不是群聊
+    bool ok;
+    int userId = conversationId.toInt(&ok);
+    if (ok && !m_groups.contains(conversationId)) {
+        // 这是好友，发送查询请求
+        qDebug() << "查询好友状态，ID:" << userId;
+        NetworkManager::instance().sendCheckUserStatusRequest(userId);
+    }
+}
+
+void MainWindow::onCheckUserStatusResult(uint8_t userId, const QString& nickname, bool isOnline)
+{
+    qDebug() << "收到用户状态 - ID:" << userId
+             << "昵称:" << nickname
+             << "在线:" << (isOnline ? "是" : "否");
+
+    // 1. 如果是自己，更新本地设置和欢迎信息
+    if (userId == NetworkManager::instance().selfId()) {
+        if (!nickname.isEmpty()) {
+            QSettings settings("CSC3002", "Chatroom");
+            settings.setValue("Client/Nickname", nickname);
+            updateWelcomeMessage();
+        }
+    }
+
+    // 2. 如果是好友，更新好友列表
+    if (m_friends.contains(userId)) {
+        QString oldNickname = m_friends[userId];
+
+        // 更新昵称
+        if (!nickname.isEmpty() && nickname != oldNickname) {
+            m_friends[userId] = nickname;
+            updateConversationList();
+
+            // 显示状态更新提示
+            QString statusText = isOnline ? "在线" : "离线";
+            QMessageBox::information(this, "更新",
+                        QString("好友%1(%2)状态更新：%3").arg(userId).arg(nickname).arg(statusText));
+        }
+    }
 }
 
 // 这个函数在用户点击“发送”按钮时被自动调用
@@ -247,24 +334,6 @@ void MainWindow::on_sendButton_clicked()
     }
 }
 
-
-// 这个函数在用户点击左侧列表时被自动调用
-// [修改] on_conversationListWidget_itemClicked
-void MainWindow::on_conversationListWidget_itemClicked(QListWidgetItem *item)
-{
-    QString conversationId = item->data(Qt::UserRole).toString();
-
-    // 清除该对话的未读计数
-    if (m_unreadCounts.contains(conversationId) && m_unreadCounts[conversationId] > 0) {
-        m_unreadCounts.remove(conversationId);
-        updateConversationItem(conversationId);
-    }
-
-    // 切换到对话
-    m_currentConversationId = conversationId;
-    qDebug() << "切换到对话:" << m_currentConversationId;
-    updateChatHistoryView();
-}
 
 void MainWindow::updateChatHistoryView()
 {
@@ -475,24 +544,16 @@ void MainWindow::onNewMessageReceived(const ChatMessage &message, const QString&
 {
     qDebug() << "[MainWindow] 收到新消息，对话ID:" << conversationId;
 
-    // 临时：为群聊消息添加前缀，避免与私聊ID冲突
-    QString actualConversationId = conversationId;
-
-    // 检查是否是群聊（通过m_groups）
-    if (m_groups.contains(conversationId)) {
-        actualConversationId = "group_" + conversationId;
-    }
-
     // 使用actualConversationId存储和显示
-    m_chatHistories[actualConversationId].append(message);
+    m_chatHistories[conversationId].append(message);
 
     // 如果当前正在看这个对话，就刷新界面
-    if (actualConversationId == m_currentConversationId) {
+    if (conversationId == m_currentConversationId) {
         updateChatHistoryView();
     } else {
         // 否则，可以在左侧列表项上显示未读标记
-        int currentUnread = m_unreadCounts.value(actualConversationId, 0);
-        m_unreadCounts[actualConversationId] = currentUnread + 1;
+        int currentUnread = m_unreadCounts.value(conversationId, 0);
+        m_unreadCounts[conversationId] = currentUnread + 1;
         // 更新对应的列表项显示
         updateConversationItem(conversationId);
         QApplication::beep();
